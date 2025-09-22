@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>2025-09 Potato-Mesh what and why</title>
+  <style>
+    body {
+      background: #fdf5e6;
+      font-family: "Times New Roman", serif;
+      color: #111;
+      margin: 0;
+      padding: 0;
+    }
+    header.page-top {
+      text-align: center;
+      margin: 20px 0 10px;
+    }
+    header.page-top img {
+      max-width: 160px;
+      height: auto;
+    }
+    article.post {
+      max-width: 860px;
+      margin: 0 auto 40px;
+      padding: 0 20px 20px;
+      border: 3px double #8b4513;
+      background: rgba(255, 255, 255, 0.9);
+    }
+    article.post h1,
+    article.post h2 {
+      font-family: "Georgia", serif;
+    }
+    article.post .lede {
+      font-weight: bold;
+    }
+    article.post table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    article.post th,
+    article.post td {
+      border-bottom: 1px solid #d2b48c;
+      padding: 6px;
+      text-align: left;
+    }
+    article.post code {
+      background: #fffaf0;
+      padding: 0 3px;
+      border: 1px dotted #d2b48c;
+    }
+    article.post pre {
+      background: #000;
+      color: #0f0;
+      padding: 10px;
+      overflow-x: auto;
+    }
+    footer.page-foot {
+      text-align: center;
+      margin-bottom: 30px;
+      font-style: italic;
+    }
+    a.back-home {
+      display: inline-block;
+      margin: 15px 0;
+    }
+  </style>
+</head>
+<body>
+  <header class="page-top">
+    <img src="./animated-under-construction-image-0053.gif" alt="Under Construction Sign" />
+    <h1>2025-09 Potato-Mesh what and why</h1>
+    <p><a class="back-home" href="./index.html">&larr; Return to the homepage</a></p>
+  </header>
+
+  <article class="post">
+  <header>
+    <h1>Inside Potato-Mesh</h1>
+    <p class="lede">
+      Meshtastic gives us resilient LoRa mesh comms; what it doesn’t give is an effortless, global view of the mesh’s health. 
+      In quiet times you need observability to prepare and debug—so when it matters, nothing breaks.
+    </p>
+  </header>
+
+  <section>
+    <h2>What Potato-Mesh Is</h2>
+    <p>
+      Potato-Mesh is a lean web app that renders what your mesh is doing—nodes, messages, telemetry. 
+      It does <em>not</em> listen on LoRa. It’s a SQLite database on a server plus a tiny API. 
+      The app knows nothing until an external ingestor reports data to it.
+    </p>
+  </section>
+
+  <section>
+    <h2>API Surface</h2>
+    <p>Report data in; read it back out. That’s it.</p>
+    <table class="api">
+      <thead>
+        <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>GET</td>
+          <td><code>/api/nodes?limit=100</code></td>
+          <td>Fetch recent nodes (metadata, last-heard, etc.).</td>
+        </tr>
+        <tr>
+          <td>GET</td>
+          <td><code>/api/messages?limit=100</code></td>
+          <td>Fetch recent messages (chat, telemetry, system).</td>
+        </tr>
+        <tr>
+          <td>POST</td>
+          <td><code>/api/nodes</code></td>
+          <td>Upsert node records. Requires <code>Authorization: Bearer &lt;API_TOKEN&gt;</code>.</td>
+        </tr>
+        <tr>
+          <td>POST</td>
+          <td><code>/api/messages</code></td>
+          <td>Append messages/telemetry. Requires the same bearer token.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>Auth:</strong> set <code>API_TOKEN</code> on the server for POSTs. Reads can be open or restricted as you prefer.</p>
+  </section>
+
+  <section>
+    <h2>How Data Gets There</h2>
+    <p>
+      Meshtastic speaks Protobuf over serial/TCP. When you connect to a node, it streams configuration, node database, 
+      and then live traffic: positions, text, telemetry. The Python ingestor lives beside a radio, opens the serial port 
+      (e.g., <code>/dev/ttyACM0</code>), and subscribes to that stream.
+    </p>
+    <ol>
+      <li><strong>Connect:</strong> Use the Meshtastic Python library to open the serial link and request NodeDB + live messages.</li>
+      <li><strong>Parse:</strong> For each <em>NodeInfo</em> / status packet, build a node object; for each chat/telemetry, build a message object.</li>
+      <li><strong>Report:</strong> POST nodes to <code>/api/nodes</code> and messages/telemetry to <code>/api/messages</code> with your bearer token.</li>
+      <li><strong>Loop:</strong> Keep listening; deduplicate where sensible; back off and retry on errors.</li>
+    </ol>
+    <p>
+      The web app never touches LoRa. The ingestor does the dirty work, the server just persists and serves.
+    </p>
+  </section>
+
+  <section>
+    <h2>Run It</h2>
+    <ul>
+      <li><strong>Code:</strong> <a href="https://github.com/l5yth/potato-mesh" rel="noopener">github.com/l5yth/potato-mesh</a></li>
+      <li><strong>Demo:</strong> <a href="https://potatomesh.net" rel="noopener">potatomesh.net</a></li>
+      <li><strong>Quick start (server):</strong> deploy the web app (Docker or bare). Set <code>API_TOKEN</code>.</li>
+      <li><strong>Quick start (ingestor):</strong> with a Meshtastic node attached, run the Python ingestor:
+        <pre><code>POTATOMESH_INSTANCE=https://your.server \
+API_TOKEN=... \
+MESH_SERIAL=/dev/ttyACM0 \
+./mesh.sh</code></pre>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Why Bother</h2>
+    <p>
+      Meshes left unknowable fail when they’re needed most. Run your own Potato-Mesh, map your community, 
+      and keep the network honest. When the lights go out, visibility is survival.
+    </p>
+  </section>
+
+  <footer class="meta">
+    <p>Built for open mesh communities. Sharp edges by design.</p>
+  </footer>
+</article>
+
+  <footer class="page-foot">
+    <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes" />
+    <div><a href="./index.html">Back to COM0 on the Web</a></div>
+  </footer>
+</body>
+</html>
