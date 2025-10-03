@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>2025-09 Running Meshtastic Daemon on Raspberry Pi 4B</title>
+  <style>
+    body {
+      background: #fdf5e6;
+      font-family: "Times New Roman", serif;
+      color: #111;
+      margin: 0;
+      padding: 0;
+    }
+    header.page-top {
+      text-align: center;
+      margin: 20px 0 10px;
+    }
+    header.page-top img {
+      max-width: 160px;
+      height: auto;
+    }
+    article.post {
+      max-width: 860px;
+      margin: 0 auto 40px;
+      padding: 0 20px 20px;
+      border: 3px double #8b4513;
+      background: rgba(255, 255, 255, 0.9);
+    }
+    article.post h1,
+    article.post h2 {
+      font-family: "Georgia", serif;
+    }
+    article.post .lede {
+      font-weight: bold;
+    }
+    article.post table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    article.post th,
+    article.post td {
+      border-bottom: 1px solid #d2b48c;
+      padding: 6px;
+      text-align: left;
+    }
+    article.post code {
+      background: #fffaf0;
+      padding: 0 3px;
+      border: 1px dotted #d2b48c;
+    }
+    article.post pre {
+      background: #000;
+      color: #0f0;
+      padding: 10px;
+      overflow-x: auto;
+    }
+    footer.page-foot {
+      text-align: center;
+      margin-bottom: 30px;
+      font-style: italic;
+    }
+    a.back-home {
+      display: inline-block;
+      margin: 15px 0;
+    }
+  </style>
+</head>
+<body>
+  <header class="page-top">
+    <h1>2025-09 Running Meshtastic Daemon on Raspberry Pi 4B</h1>
+    <p><a class="back-home" href="./index.html">&larr; Return to the homepage</a></p>
+  </header>
+
+  <article class="post">
+    <p class="lede">
+      This is a minimal, no-frills write-up of how I built and ran the Linux-native Meshtastic daemon
+      (<code>meshtasticd</code>) on a Raspberry Pi 4 Model B running <strong>ArchLinuxARM</strong>, using a
+      <strong>Waveshare SX1268 (433/443&nbsp;MHz) LoRa HAT</strong> mounted on the 40-pin header (SPI). It captures exactly what
+      worked for me, with the versions I used.
+    </p>
+
+    <hr />
+
+    <h2>Hardware</h2>
+    <ul>
+      <li>Raspberry Pi 4 Model B</li>
+      <li>Waveshare SX1268 LoRa HAT (433/443&nbsp;MHz), connected via SPI</li>
+    </ul>
+
+    <h2>Assumptions</h2>
+    <ul>
+      <li>Fresh-ish ArchLinuxARM userspace with sudo/root access</li>
+      <li>SPI enabled via Raspberry Pi boot firmware (<code>/boot/config.txt</code>)</li>
+    </ul>
+
+    <hr />
+
+    <h2>1) Install dependencies</h2>
+    <pre><code>pacman -S --needed git vim base-devel python python-pipx bluez bluez-libs bluez-utils libgpiod yaml-cpp fmt clang openssl cmake pkgconf
+</code></pre>
+
+    <h2>2) Install PlatformIO and Meshtastic Python CLI</h2>
+    <pre><code>pipx install platformio meshtastic
+</code></pre>
+
+    <h2>3) Clone firmware and build the native target</h2>
+    <p>I pinned to the tag I tested:</p>
+    <pre><code>git clone https://github.com/meshtastic/firmware
+cd firmware
+git checkout v2.7.11.ee68575
+pio run -e native
+</code></pre>
+
+    <h2>4) Check and install the binary</h2>
+    <pre><code>cd .pio/build/native
+./program --version
+install -m 0755 program /usr/local/bin/meshtasticd
+meshtasticd --version
+</code></pre>
+
+    <h2>5) Configure Meshtastic daemon for the Waveshare HAT</h2>
+    <p>Create the config directory and file:</p>
+    <pre><code>mkdir -p /etc/meshtasticd
+vim /etc/meshtasticd/config.yaml
+</code></pre>
+
+    <p>My working <code>/etc/meshtasticd/config.yaml</code> (GPIOs are BCM numbers):</p>
+    <pre><code>Module: Radio
+Lora:
+  Module: SX126x
+  Region: EU_433
+  SPI:
+    Device: /dev/spidev0.0
+  Pins:
+    NSS: 8
+    RESET: 25
+    DIO1: 24
+    BUSY: 23
+</code></pre>
+
+    <h2>6) Enable SPI in the boot firmware</h2>
+    <p>Edit the Pi’s boot config:</p>
+    <pre><code>vim /boot/config.txt
+</code></pre>
+    <p>Add:</p>
+    <pre><code>dtparam=spi=on
+dtoverlay=spi0-0cs
+</code></pre>
+    <p><em>Note:</em> some notes used <code>idtoverlay</code> by typo; the correct key is <code>dtoverlay</code>.</p>
+
+    <h2>7) Load SPI module and reboot</h2>
+    <pre><code>echo spi_bcm2835 | sudo tee /etc/modules-load.d/spi.conf
+reboot
+ls -l /dev/spidev0.0
+</code></pre>
+
+    <h2>8) Create a systemd service</h2>
+    <pre><code>vim /etc/systemd/system/meshtasticd.service
+</code></pre>
+
+    <p>Service file contents:</p>
+    <pre><code># /etc/systemd/system/meshtasticd.service
+[Unit]
+Description=Meshtastic Daemon (Linux-native)
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/meshtasticd -c /etc/meshtasticd/config.yaml
+Restart=always
+
+# Start as root unless you've set udev rules for /dev/spidev0.0 and gpio
+
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+
+    <p>Enable and start:</p>
+    <pre><code>systemctl enable --now meshtasticd
+</code></pre>
+
+    <h2>9) Verify</h2>
+    <p>Use the Meshtastic CLI to confirm the daemon is up and reachable:</p>
+    <pre><code>meshtastic --info
+</code></pre>
+
+    <hr />
+
+    <h2>Notes / Pin mapping</h2>
+    <ul>
+      <li><strong>SPI device:</strong> <code>/dev/spidev0.0</code></li>
+      <li><strong>NSS/CS (CE0):</strong> BCM 8</li>
+      <li><strong>RESET:</strong> BCM 25</li>
+      <li><strong>DIO1:</strong> BCM 24</li>
+      <li><strong>BUSY:</strong> BCM 23</li>
+    </ul>
+    <p>Different Waveshare revisions may wire RESET/DIO/BUSY differently; adjust the YAML if initialization fails.</p>
+
+    <h2>Optional: run non-root</h2>
+    <p>If you want to drop root, add udev rules for <code>/dev/gpiochip*</code> and <code>/dev/spidev0.0</code>, put your service user in the corresponding group(s), and switch <code>User=</code>/<code>Group=</code> in the service file.</p>
+
+    <hr />
+
+    <h2>Appendix: Full command list (copy-paste)</h2>
+    <pre><code># install dependencies
+pacman -S --needed git vim base-devel python python-pipx bluez bluez-libs bluez-utils libgpiod yaml-cpp fmt clang openssl cmake pkgconf
+
+# install platformio and meshtastic python lib
+
+pipx install platformio meshtastic
+
+# install native firmware on latest available tag
+
+git clone https://github.com/meshtastic/firmware
+cd firmware
+git checkout v2.7.11.ee68575
+pio run -e native
+
+# check and install binaries
+
+cd .pio/build/native
+./program --version
+install -m 0755 program /usr/local/bin/meshtasticd
+meshtasticd --version
+
+# configure meshtastic daemon for waveshare hat
+
+mkdir -p /etc/meshtasticd
+vim /etc/meshtasticd/config.yaml
+
+# /etc/meshtasticd/config.yaml
+
+Module: Radio
+Lora:
+Module: SX126x
+Region: EU_433
+SPI:
+Device: /dev/spidev0.0
+Pins:
+NSS: 8
+RESET: 25
+DIO1: 24
+BUSY: 23
+
+# configure boot config to enable spi
+
+vim /boot/config.txt
+
+# /boot/config.txt
+
+dtparam=spi=on
+dtoverlay=spi0-0cs
+
+# enable spi module and reboot
+
+echo spi_bcm2835 | sudo tee /etc/modules-load.d/spi.conf
+reboot
+ls -l /dev/spidev0.0
+
+# create systemd service and enable
+
+vim /etc/systemd/system/meshtasticd.service
+
+# /etc/systemd/system/meshtasticd.service
+
+[Unit]
+Description=Meshtastic Daemon (Linux-native)
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/meshtasticd -c /etc/meshtasticd/config.yaml
+Restart=always
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+
+systemctl enable --now meshtasticd
+
+# check daemon
+
+meshtastic --info
+</code></pre>
+  </article>
+
+  <footer class="page-foot">
+    <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes" />
+    <div><a href="./index.html">Back to COM0 on the Web</a></div>
+  </footer>
+</body>
+</html>
