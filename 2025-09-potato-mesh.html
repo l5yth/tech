@@ -1,182 +1,152 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>2025-09 PotatoMesh what and why</title>
-  <style>
-    body {
-      background: #fdf5e6;
-      font-family: "Times New Roman", serif;
-      color: #111;
-      margin: 0;
-      padding: 0;
-    }
-    header.page-top {
-      text-align: center;
-      margin: 20px 0 10px;
-    }
-    header.page-top img {
-      max-width: 160px;
-      height: auto;
-    }
-    article.post {
-      max-width: 860px;
-      margin: 0 auto 40px;
-      padding: 0 20px 20px;
-      border: 3px double #8b4513;
-      background: rgba(255, 255, 255, 0.9);
-    }
-    article.post h1,
-    article.post h2 {
-      font-family: "Georgia", serif;
-    }
-    article.post .lede {
-      font-weight: bold;
-    }
-    article.post table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    article.post th,
-    article.post td {
-      border-bottom: 1px solid #d2b48c;
-      padding: 6px;
-      text-align: left;
-    }
-    article.post code {
-      background: #fffaf0;
-      padding: 0 3px;
-      border: 1px dotted #d2b48c;
-    }
-    article.post pre {
-      background: #000;
-      color: #0f0;
-      padding: 10px;
-      overflow-x: auto;
-    }
-    footer.page-foot {
-      text-align: center;
-      margin-bottom: 30px;
-      font-style: italic;
-    }
-    a.back-home {
-      display: inline-block;
-      margin: 15px 0;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f5f0">
+  <title>PotatoMesh: what and why | l5yth</title>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <header class="page-top">
-    <h1>2025-09 PotatoMesh what and why</h1>
-    <p><a class="back-home" href="./index.html">&larr; Return to the homepage</a></p>
+  <header class="site-header">
+    <nav class="wrap site-nav" aria-label="Primary">
+      <a class="wordmark" href="./index.html">l5yth</a>
+      <ul>
+        <li><a href="./index.html#work">Work</a></li>
+        <li><a href="./index.html#writing">Writing</a></li>
+        <li><a href="./index.html#contact">Contact</a></li>
+      </ul>
+    </nav>
   </header>
 
-  <article class="post">
-    <p>
-      I have been hacking on <strong>PotatoMesh</strong> for the last couple of weeks and here are some insights. I'll give you a technical sketch: how it works, how it plugs into Meshtastic, what data flows where, and how you can run your own. (Spoiler: it's white label!)
-    </p>
+  <main>
+    <article class="post">
+      <header class="post-header">
+        <a class="back" href="./index.html#writing">Back to all writing</a>
+        <p class="eyebrow"><time datetime="2025-09">September 2025</time> &middot; Project notes</p>
+        <h1>PotatoMesh: what and why</h1>
+        <p class="lede">
+          I have been hacking on <strong>PotatoMesh</strong> for the last couple of weeks and here are some insights. I'll give you a technical sketch: how it works, how it plugs into Meshtastic, what data flows where, and how you can run your own. (Spoiler: it's white label!)
+        </p>
+      </header>
 
-    <hr />
+      <h2>Why a tool like PotatoMesh is needed</h2>
+      <p>
+        Meshtastic gives you resilient, off-grid mesh networks using LoRa. But by itself, it's hard to get a global view of what's going on in a community mesh: who is alive, how many hops, where are telemetry gaps, which radios are misbehaving. During "quiet" times, we need visibility so that when crisis or scale hits, debugging, preparation, and maintenance are possible. PotatoMesh is one of the tools I built for that.
+      </p>
 
-    <h2>Why a tool like PotatoMesh is needed</h2>
-    <p>
-      Meshtastic gives you resilient, off-grid mesh networks using LoRa. But by itself, it's hard to get a global view of what's going on in a community mesh: who is alive, how many hops, where are telemetry gaps, which radios are misbehaving. During "quiet" times, we need visibility so that when crisis or scale hits, debugging, preparation, and maintenance are possible. PotatoMesh is one of the tools I built for that.
-    </p>
+      <hr />
 
-    <hr />
+      <h2>Architecture of PotatoMesh: Ruby web app + Python ingestor</h2>
+      <p>
+        At its core, the PotatoMesh web app is simple: a SQLite database live on a server. It <strong>does not</strong> poll the mesh, nor listen on LoRa directly. It knows nothing until someone <strong>reports</strong> mesh data (nodes, messages, positions, etc.) via its API endpoints. The API is the only inlet for the mesh state of the web app.
+      </p>
+      <ul>
+        <li><strong>Database</strong>: SQLite, storing node records, message history, telemetry (as reported).</li>
+        <li><strong>Web UI</strong>: map view, chat/message view, table of nodes; search / filter; first-seen new node alerts. Authenticated POSTs feed it; GETs allow inspection.</li>
+      </ul>
 
-    <h2>Architecture of PotatoMesh: Ruby web app + Python ingestor</h2>
-    <p>
-      At its core, the PotatoMesh web app is simple: a SQLite database live on a server. It <strong>does not</strong> poll the mesh, nor listen on LoRa directly. It knows nothing until someone <strong>reports</strong> mesh data (nodes, messages, positions, etc.) via its API endpoints. The API is the only inlet for the mesh state of the web app.
-    </p>
-    <ul>
-      <li><strong>Database</strong>: SQLite, storing node records, message history, telemetry (as reported).</li>
-      <li><strong>Web UI</strong>: map view, chat/message view, table of nodes; search / filter; first-seen new node alerts. Authenticated POSTs feed it; GETs allow inspection.</li>
-    </ul>
+      <h3>API endpoints</h3>
+      <p>Four main ones:</p>
+      <div class="table-scroll">
+        <table>
+        <thead>
+          <tr><th>Method</th><th>Endpoint</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>GET /api/nodes?limit=100</code></td><td>fetch recent nodes reported to the app (with their known metadata)</td><td></td></tr>
+          <tr><td><code>GET /api/messages?limit=100</code></td><td>fetch recent messages seen in the mesh (chats, reactions, etc.)</td><td></td></tr>
+          <tr><td><code>POST /api/nodes</code></td><td>"Upsert" nodes: send node data (JSON); requires <code>Authorization: Bearer &lt;API_TOKEN&gt;</code></td><td></td></tr>
+          <tr><td><code>POST /api/messages</code></td><td>Append new messages (JSON); requires same auth token</td><td></td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>
+        The <code>API_TOKEN</code> environment variable must be set (non-empty) on the web app to allow POSTs. GETs are open (or less restricted).
+      </p>
 
-    <h3>API endpoints</h3>
-    <p>Four main ones:</p>
-    <table>
-      <thead>
-        <tr><th>Method</th><th>Endpoint</th><th>Purpose</th></tr>
-      </thead>
-      <tbody>
-        <tr><td><code>GET /api/nodes?limit=100</code></td><td>fetch recent nodes reported to the app (with their known metadata)</td><td></td></tr>
-        <tr><td><code>GET /api/messages?limit=100</code></td><td>fetch recent messages seen in the mesh (chats, reactions, etc.)</td><td></td></tr>
-        <tr><td><code>POST /api/nodes</code></td><td>"Upsert" nodes: send node data (JSON); requires <code>Authorization: Bearer &lt;API_TOKEN&gt;</code></td><td></td></tr>
-        <tr><td><code>POST /api/messages</code></td><td>Append new messages (JSON); requires same auth token</td><td></td></tr>
-      </tbody>
-    </table>
-    <p>
-      The <code>API_TOKEN</code> environment variable must be set (non-empty) on the web app to allow POSTs. GETs are open (or less restricted).
-    </p>
+      <hr />
 
-    <hr />
+      <h2>Inner workings: Meshtastic protocol, data ingestion</h2>
+      <p>
+        To fill those API endpoints, PotatoMesh uses a <strong>Python ingestor</strong> script ("mesh.sh" + supporting code under <code>./data/</code>) which connects to a <strong>local Meshtastic node</strong> over a serial or TCP port. Here's outline of how data flows and is processed.
+      </p>
 
-    <h2>Inner workings: Meshtastic protocol, data ingestion</h2>
-    <p>
-      To fill those API endpoints, PotatoMesh uses a <strong>Python ingestor</strong> script ("mesh.sh" + supporting code under <code>./data/</code>) which connects to a <strong>local Meshtastic node</strong> over a serial or TCP port. Here's outline of how data flows and is processed.
-    </p>
+      <h3>Meshtastic protocol basics</h3>
+      <ul>
+        <li>Meshtastic devices communicate via encrypted <strong>protobufs</strong>: structured message definitions. These define things like <code>NodeInfo</code>, <code>MyNodeInfo</code>, <code>User</code>, messages, telemetry, positions, etc.</li>
+        <li>To talk to a Meshtastic node over USB/serial/TCP/BLE, there is a <strong>Client API</strong>. In that API:
+          <ol>
+            <li>When a client connects, it typically sends a <strong>startConfig</strong> (or <code>want_config_id</code>) protobuf to ask for the current NodeDB (nodes in mesh seen), the radio settings, user info, etc.</li>
+            <li>The node replies with a stream of <code>FromRadio</code> protobuf messages: first the configuration (radio config, user, mynode), then the last 80 known <code>NodeInfo</code> records, ending with an end-config marker. After that, mesh messages, positions, telemetry, etc.</li>
+          </ol>
+        </li>
+        <li>Over serial or TCP, there is framing: i.e., Meshtastic uses a 4-byte header (START1=0x94, START2=0xc3, then two bytes length) to wrap each protobuf packet in streaming transports. If the stream is unreliable / loses bytes, there is synchronization logic.</li>
+        <li>Telemetry: nodes periodically report telemetry data (battery, environment, etc.) via defined protobuf messages. Also messages (text, chat), and node status / location / GPS.</li>
+      </ul>
 
-    <h3>Meshtastic protocol basics</h3>
-    <ul>
-      <li>Meshtastic devices communicate via encrypted <strong>protobufs</strong>: structured message definitions. These define things like <code>NodeInfo</code>, <code>MyNodeInfo</code>, <code>User</code>, messages, telemetry, positions, etc.</li>
-      <li>To talk to a Meshtastic node over USB/serial/TCP/BLE, there is a <strong>Client API</strong>. In that API:
-        <ol>
-          <li>When a client connects, it typically sends a <strong>startConfig</strong> (or <code>want_config_id</code>) protobuf to ask for the current NodeDB (nodes in mesh seen), the radio settings, user info, etc.</li>
-          <li>The node replies with a stream of <code>FromRadio</code> protobuf messages: first the configuration (radio config, user, mynode), then the last 80 known <code>NodeInfo</code> records, ending with an end-config marker. After that, mesh messages, positions, telemetry, etc.</li>
-        </ol>
-      </li>
-      <li>Over serial or TCP, there is framing: i.e., Meshtastic uses a 4-byte header (START1=0x94, START2=0xc3, then two bytes length) to wrap each protobuf packet in streaming transports. If the stream is unreliable / loses bytes, there is synchronization logic.</li>
-      <li>Telemetry: nodes periodically report telemetry data (battery, environment, etc.) via defined protobuf messages. Also messages (text, chat), and node status / location / GPS.</li>
-    </ul>
+      <h3>Python ingestor in PotatoMesh</h3>
+      <p>What this script does:</p>
+      <ol>
+        <li><strong>Connect</strong> to a Meshtastic node on a serial port (e.g., <code>/dev/ttyACM0</code>), using the Meshtastic Python library. It sets things so that it receives the node database (NodeInfo etc.) and ongoing messages / telemetry as the mesh node sees them.</li>
+        <li><strong>Parse</strong> each piece of data:
+          <ul>
+            <li>Whenever a <code>NodeInfo</code> or similar node status protobuf arrives, it constructs a "node" record (node ID, short name, etc.).</li>
+            <li>Whenever a message or telemetry arrives, collect the message: who from, to (broadcast or specific), type (text / telemetry / etc.), payload.</li>
+          </ul>
+        </li>
+        <li><strong>POST</strong> to the web app's endpoints:
+          <ul>
+            <li>Node updates via <code>POST /api/nodes</code></li>
+            <li>Message / telemetry / chat data via <code>POST /api/messages</code></li>
+          </ul>
+          <p>The tool (via environment variables) knows the instance URL and API token to use. The web app ensures deduplication on node IDs etc., so repeated reports of the same node do not create duplicates.</p>
+        </li>
+        <li><strong>Continuous listening / looping</strong>: the ingestor sits waiting for new protobuf messages via the serial stream. When new messages show up, they're parsed &amp; forwarded. In debug mode you can see logs like "upserted node …" or "stored message …" etc. Just set "DEBUG=1".</li>
+      </ol>
 
-    <h3>Python ingestor in PotatoMesh</h3>
-    <p>What this script does:</p>
-    <ol>
-      <li><strong>Connect</strong> to a Meshtastic node on a serial port (e.g., <code>/dev/ttyACM0</code>), using the Meshtastic Python library. It sets things so that it receives the node database (NodeInfo etc.) and ongoing messages / telemetry as the mesh node sees them.</li>
-      <li><strong>Parse</strong> each piece of data:
-        <ul>
-          <li>Whenever a <code>NodeInfo</code> or similar node status protobuf arrives, it constructs a "node" record (node ID, short name, etc.).</li>
-          <li>Whenever a message or telemetry arrives, collect the message: who from, to (broadcast or specific), type (text / telemetry / etc.), payload.</li>
-        </ul>
-      </li>
-      <li><strong>POST</strong> to the web app's endpoints:
-        <ul>
-          <li>Node updates via <code>POST /api/nodes</code></li>
-          <li>Message / telemetry / chat data via <code>POST /api/messages</code></li>
-        </ul>
-        <p>The tool (via environment variables) knows the instance URL and API token to use. The web app ensures deduplication on node IDs etc., so repeated reports of the same node do not create duplicates.</p>
-      </li>
-      <li><strong>Continuous listening / looping</strong>: the ingestor sits waiting for new protobuf messages via the serial stream. When new messages show up, they're parsed &amp; forwarded. In debug mode you can see logs like "upserted node …" or "stored message …" etc. Just set "DEBUG=1".</li>
-    </ol>
+      <hr />
 
-    <hr />
+      <h2>Summary &amp; running</h2>
+      <p>You get:</p>
+      <ul>
+        <li>A remote-web dashboard that visualizes mesh health: nodes, messages, first-seen, map, etc.</li>
+        <li>A python serial ingestor that feeds it. Without that, nothing appears.</li>
+        <li>Simple architecture: no MQTT broker, no huge infrastructure. Just serial + HTTP + SQLite.</li>
+      </ul>
+      <p>To try it:</p>
+      <ul>
+        <li>Demo is live at <strong>potatomesh.net</strong> for Berlin #MediumFast on 868MHz.</li>
+        <li>Instructions in the README: using Docker / docker-compose to launch the web app; configure environment (<code>API_TOKEN</code>, etc.). Then run the python ingestor with <code>POTATOMESH_INSTANCE=&lt;url&gt; API_TOKEN=&lt;token&gt; MESH_SERIAL=&lt;serial port&gt; DEBUG=1 ./mesh.sh</code> etc.</li>
+      </ul>
 
-    <h2>Summary &amp; running</h2>
-    <p>You get:</p>
-    <ul>
-      <li>A remote-web dashboard that visualizes mesh health: nodes, messages, first-seen, map, etc.</li>
-      <li>A python serial ingestor that feeds it. Without that, nothing appears.</li>
-      <li>Simple architecture: no MQTT broker, no huge infrastructure. Just serial + HTTP + SQLite.</li>
-    </ul>
-    <p>To try it:</p>
-    <ul>
-      <li>Demo is live at <strong>potatomesh.net</strong> for Berlin #MediumFast on 868MHz.</li>
-      <li>Instructions in the README: using Docker / docker-compose to launch the web app; configure environment (<code>API_TOKEN</code>, etc.). Then run the python ingestor with <code>POTATOMESH_INSTANCE=&lt;url&gt; API_TOKEN=&lt;token&gt; MESH_SERIAL=&lt;serial port&gt; DEBUG=1 ./mesh.sh</code> etc.</li>
-    </ul>
+      <hr />
 
-    <hr />
+      <h2>Call to action</h2>
+      <p>
+        Run your own PotatoMesh. Hook a Meshtastic node (or several), run the ingestor, set up the web app, and suddenly you don't fly blind. Debug routing, telemetry, battery, nodes that drop out, hops that get too high.
+      </p>
 
-    <h2>Call to action</h2>
-    <p>
-      Run your own PotatoMesh. Hook a Meshtastic node (or several), run the ingestor, set up the web app, and suddenly you don't fly blind. Debug routing, telemetry, battery, nodes that drop out, hops that get too high.
-    </p>
-  </article>
+      <footer class="post-footer">
+        <a href="./index.html#writing">Back to all writing</a>
+        <a class="muted" href="mailto:COM0@l5y.tech">Corrections to COM0@l5y.tech</a>
+      </footer>
+    </article>
+  </main>
 
-  <footer class="page-foot">
-    <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes" />
-    <div><a href="./index.html">Back to COM0 on the Web</a></div>
+  <footer class="site-footer compact">
+    <div class="wrap">
+      <ul>
+        <li><a class="wordmark" href="./index.html">l5yth</a></li>
+        <li><a class="mono" href="mailto:COM0@l5y.tech">COM0@l5y.tech</a></li>
+        <li><a href="./com0.l5y.tech.pub.asc">PGP</a></li>
+      </ul>
+      <ul>
+        <li><a href="https://github.com/l5yth">GitHub</a></li>
+        <li><a href="https://bsky.app/profile/l5y.tech">Bluesky</a></li>
+        <li><a href="https://www.reddit.com/user/l5yth/">Reddit</a></li>
+      </ul>
+    </div>
   </footer>
 </body>
 </html>
