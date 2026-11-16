@@ -1,49 +1,157 @@
 <!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: 2025-2026 l5yth
+SPDX-License-Identifier: Unlicense
+-->
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>2025-09 PotatoMesh what and why</title>
+  <meta name="description" content="How it works, how it plugs into Meshtastic, and how you can run your own.">
+  <meta name="author" content="l5yth">
+  <meta name="keywords" content="meshtastic, ruby, python">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="PotatoMesh what and why">
+  <meta property="og:description" content="How it works, how it plugs into Meshtastic, and how you can run your own.">
+  <meta property="article:published_time" content="2025-09-22">
+  <meta property="article:tag" content="meshtastic">
+  <meta property="article:tag" content="ruby">
+  <meta property="article:tag" content="python">
+  <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "BlogPosting", "headline": "PotatoMesh what and why", "description": "How it works, how it plugs into Meshtastic, and how you can run your own.", "datePublished": "2025-09-22", "keywords": "meshtastic, ruby, python", "author": { "@type": "Person", "name": "l5yth" } }</script>
   <style>
     body {
-      background: #fdf5e6;
-      font-family: "Times New Roman", serif;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 16px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      background: #c2c09f url(./tile.png);
       color: #111;
-      margin: 0;
-      padding: 0;
+      font: 18px/1.5 "Times New Roman", serif;
     }
-    header.page-top {
-      text-align: center;
-      margin: 20px 0 10px;
+    a:link {
+      color: #0000ee;
     }
-    header.page-top img {
-      max-width: 160px;
-      height: auto;
+    a:visited {
+      color: #551a8b;
     }
+    a:hover {
+      color: #ff0000;
+    }
+
+    /* Masthead: the small sign links home, the buttons jump into it. */
+    header a.sign {
+      display: block;
+      text-decoration: none;
+      color: #efff02;
+      border: 6px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #efff02 0 6px, #000 6px 12px) border-box;
+      padding: 4px;
+    }
+    .sign-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 4px 16px;
+      border: 1px solid #efff02;
+      padding: 10px 14px;
+    }
+    .sign-title {
+      font: bold 22px/1.1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .sign-tagline {
+      font: bold 11px/1.4 Verdana, Geneva, sans-serif;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    nav.buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    nav.buttons a {
+      background: #d3d3d3;
+      color: #111;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      text-decoration: none;
+      padding: 8px 18px;
+      border: 1px solid;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    nav.buttons a:active {
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+      box-shadow: inset 1px 1px 0 #797a7a;
+    }
+
+    /* The article box, its hazard-striped label, title and tags. */
     article.post {
-      max-width: 860px;
-      margin: 0 auto 40px;
-      padding: 0 20px 20px;
+      position: relative;
+      background: #fdf5e6;
       border: 3px double #8b4513;
-      background: rgba(255, 255, 255, 0.9);
+      padding: 36px 28px 24px;
     }
-    article.post h1,
+    .label {
+      position: absolute;
+      top: -15px;
+      left: 18px;
+      border: 3px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #f0e010 0 3px, #000 3px 6px) border-box;
+      color: #40a0f0;
+      text-shadow: 0 0 5px #40a0f0;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+    }
+    article.post h1 {
+      margin: 0 0 8px;
+      font: bold 34px/1.15 Georgia, serif;
+      text-wrap: balance;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 12px;
+      margin: 0 0 22px;
+    }
+    article.post .tags a {
+      font: 13px monospace;
+      color: #8b4513;
+      text-decoration: none;
+    }
+    article.post .tags a:hover {
+      text-decoration: underline;
+    }
+
+    /* The post body: its markup is unchanged, only these rules restyle it. */
+    article.post hr {
+      margin: 28px 0;
+    }
     article.post h2 {
-      font-family: "Georgia", serif;
+      font: bold 24px/1.25 Georgia, serif;
+      margin: 1.5em 0 .5em;
+    }
+    article.post h3 {
+      font: bold 19px/1.3 Georgia, serif;
+      margin: 1.3em 0 .4em;
     }
     article.post .lede {
       font-weight: bold;
     }
-    article.post table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    article.post th,
-    article.post td {
-      border-bottom: 1px solid #d2b48c;
-      padding: 6px;
-      text-align: left;
-    }
     article.post code {
+      font: 14px/1.4 monospace;
       background: #fffaf0;
       padding: 0 3px;
       border: 1px dotted #d2b48c;
@@ -51,27 +159,75 @@
     article.post pre {
       background: #000;
       color: #0f0;
-      padding: 10px;
+      padding: 12px 14px;
       overflow-x: auto;
+      font: 13px/1.5 monospace;
+      margin: 1em 0;
+      border: 1px solid;
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
     }
-    footer.page-foot {
+    article.post pre code {
+      font: inherit;
+      background: none;
+      padding: 0;
+      border: 0;
+    }
+    article.post table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+    article.post th,
+    article.post td {
+      border-bottom: 1px solid #d2b48c;
+      padding: 6px;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: break-word;
+    }
+
+    /* Footer inside the article: rule, mailbox GIF, the way home. */
+    article.post footer {
       text-align: center;
-      margin-bottom: 30px;
       font-style: italic;
+      margin-top: 34px;
     }
-    a.back-home {
-      display: inline-block;
-      margin: 15px 0;
+    article.post footer hr {
+      width: 50%;
+      margin: 0 auto 18px;
+    }
+
+    /* Narrow screens: long code in a table cell wraps instead of widening the page. */
+    @media (max-width: 600px) {
+      article.post td code {
+        overflow-wrap: anywhere;
+      }
     }
   </style>
 </head>
 <body>
-  <header class="page-top">
-    <h1>2025-09 PotatoMesh what and why</h1>
-    <p><a class="back-home" href="./index.html">&larr; Return to the homepage</a></p>
+  <header>
+    <a class="sign" href="./index.html">
+      <span class="sign-inner">
+        <span class="sign-title">COM0 on the Web</span>
+        <span class="sign-tagline">l5yth, freelance engineer</span>
+      </span>
+    </a>
+    <nav class="buttons">
+      <a href="./index.html#about">About me</a>
+      <a href="./index.html#blog">Blog</a>
+      <a href="./index.html#contact">Contact</a>
+    </nav>
   </header>
 
   <article class="post">
+    <div class="label">Blog / 2025-09-22</div>
+    <h1>PotatoMesh what and why</h1>
+    <div class="tags">
+      <a href="./index.html#tag-meshtastic">#meshtastic</a>
+      <a href="./index.html#tag-ruby">#ruby</a>
+      <a href="./index.html#tag-python">#python</a>
+    </div>
     <p>
       I have been hacking on <strong>PotatoMesh</strong> for the last couple of weeks and here are some insights. I'll give you a technical sketch: how it works, how it plugs into Meshtastic, what data flows where, and how you can run your own. (Spoiler: it's white label!)
     </p>
@@ -172,11 +328,11 @@
     <p>
       Run your own PotatoMesh. Hook a Meshtastic node (or several), run the ingestor, set up the web app, and suddenly you don't fly blind. Debug routing, telemetry, battery, nodes that drop out, hops that get too high.
     </p>
+    <footer>
+      <hr>
+      <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes">
+      <div><a href="./index.html">Back to COM0 on the Web</a></div>
+    </footer>
   </article>
-
-  <footer class="page-foot">
-    <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes" />
-    <div><a href="./index.html">Back to COM0 on the Web</a></div>
-  </footer>
 </body>
 </html>
