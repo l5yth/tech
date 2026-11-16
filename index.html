@@ -1,51 +1,433 @@
 <!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: 2025-2026 l5yth
+SPDX-License-Identifier: Unlicense
+-->
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Welcome to My Web Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>COM0 on the Web</title>
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-    }
     body {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 40px 16px 44px;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      gap: 38px;
+      background: #c2c09f url(./tile.png);
+      color: #111;
+      font: 17px/1.45 "Times New Roman", serif;
+    }
+    a:link {
+      color: #0000ee;
+    }
+    a:visited {
+      color: #551a8b;
+    }
+    a:hover {
+      color: #ff0000;
+    }
+    @keyframes l5y-blink {
+      50% {
+        visibility: hidden;
+      }
+    }
+
+    /* Masthead: the construction sign, its ticker and the three buttons. */
+    header {
       text-align: center;
-      overflow-y: auto;
     }
-    img {
-      margin: 20px 0;
+    .sign {
+      border: 10px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #efff02 0 10px, #000 10px 20px) border-box;
+      padding: 6px;
     }
-    hr {
-      width: 50%;
+    .sign-inner {
+      border: 1px solid #efff02;
+      color: #efff02;
     }
-    marquee {
-      margin-top: 20px;
+    .sign h1 {
+      margin: 0;
+      padding: 24px 16px 6px;
+      font: bold clamp(30px, 8vw, 52px)/1.05 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-wrap: balance;
+    }
+    .tagline {
+      margin: 0;
+      padding: 0 16px 22px;
+      font: bold 13px/1.4 Verdana, Geneva, sans-serif;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+    .ticker {
+      border-top: 1px solid #efff02;
+      padding: 6px 0;
+      font: bold 12px/1.4 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    /* Still by default; the marquee runs only when motion is welcome. */
+    .ticker marquee {
+      display: none;
+    }
+    .ticker-still {
+      padding: 0 10px;
+    }
+    nav.buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    nav.buttons a {
+      background: #d3d3d3;
+      color: #111;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      text-decoration: none;
+      padding: 8px 18px;
+      border: 1px solid;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    nav.buttons a:active {
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+      box-shadow: inset 1px 1px 0 #797a7a;
+    }
+
+    /* Boxes and their hazard-striped labels. */
+    .box {
+      position: relative;
+      background: #fdf5e6;
+      border: 3px double #8b4513;
+      padding: 32px 28px 24px;
+      scroll-margin-top: 30px;
+    }
+    .label {
+      position: absolute;
+      top: -15px;
+      left: 18px;
+      margin: 0;
+      border: 3px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #f0e010 0 3px, #000 3px 6px) border-box;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+    }
+    #about .label {
+      color: #f05000;
+      text-shadow: 0 0 5px #f05000;
+    }
+    #blog .label {
+      color: #40a0f0;
+      text-shadow: 0 0 5px #40a0f0;
+    }
+    #contact .label {
+      color: #0f0;
+      text-shadow: 0 0 5px #0f0;
+    }
+
+    /* About me. */
+    .lead {
+      margin: 0 0 10px;
+      font: bold 26px/1.2 Georgia, serif;
+      text-wrap: balance;
+    }
+    .pitch {
+      margin: 0;
+      text-wrap: pretty;
+    }
+    .skills {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 16px 24px;
+      margin-top: 22px;
+    }
+    .skill {
+      border-top: 1px solid #d2b48c;
+      padding-top: 12px;
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 6px;
+    }
+    .chips code {
+      font: 13px/1.5 monospace;
+      background: #fffaf0;
+      padding: 0 3px;
+      border: 1px dotted #d2b48c;
+    }
+
+    /* Latest blog posts, with the tag filter running on :target. */
+    #blog {
+      padding: 22px 28px 10px;
+    }
+    .tag-anchor {
+      position: absolute;
+      top: -30px;
+      left: 0;
+    }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 0 16px;
+    }
+    .filters-label {
+      font: 13px monospace;
+      color: #8b4513;
+      margin-right: 4px;
+    }
+    #blog .filters a {
+      background: #d3d3d3;
+      color: #111;
+      font: bold 11px/1 Verdana, Geneva, sans-serif;
+      text-decoration: none;
+      padding: 6px 10px;
+      border: 1px solid;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    #blog .filters .f-all,
+    #tag-meshtastic:target ~ .filters .f-meshtastic,
+    #tag-linux:target ~ .filters .f-linux,
+    #tag-python:target ~ .filters .f-python,
+    #tag-raspberry-pi:target ~ .filters .f-raspberry-pi,
+    #tag-ruby:target ~ .filters .f-ruby {
+      background: #efff02;
+      color: #000;
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+      box-shadow: inset 1px 1px 0 #797a7a;
+    }
+    #blog .tag-anchor:target ~ .filters .f-all {
+      background: #d3d3d3;
+      color: #111;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    #tag-meshtastic:target ~ .entry:not(.t-meshtastic),
+    #tag-linux:target ~ .entry:not(.t-linux),
+    #tag-python:target ~ .entry:not(.t-python),
+    #tag-raspberry-pi:target ~ .entry:not(.t-raspberry-pi),
+    #tag-ruby:target ~ .entry:not(.t-ruby) {
+      display: none;
+    }
+    .entry {
+      display: grid;
+      grid-template-columns: 86px minmax(0, 1fr);
+      gap: 0 14px;
+      align-items: baseline;
+      padding: 12px 0;
+      border-top: 1px solid #d2b48c;
+    }
+    .entry time {
+      font: 13px monospace;
+      color: #8b4513;
+    }
+    .entry-title {
       font-weight: bold;
+      font-size: 19px;
+    }
+    .new {
+      display: inline-block;
+      vertical-align: middle;
+      background: #efff02;
+      color: #000;
+      font: bold 11px/1 Verdana, Geneva, sans-serif;
+      padding: 2px 4px;
+    }
+    .blurb {
+      margin-top: 2px;
+      font-size: 16px;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 12px;
+      margin: 6px 0 0;
+    }
+    #blog .tags a {
+      font: 13px monospace;
+      color: #8b4513;
+      text-decoration: none;
+    }
+    #blog .tags a:hover {
+      text-decoration: underline;
+    }
+
+    /* Contact. */
+    #contact {
+      padding: 36px 28px 24px;
+      text-align: center;
+    }
+    .socials {
+      position: relative;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .socials img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .socials a {
+      position: absolute;
+      top: 0;
+      height: 100%;
+    }
+    .social-reddit {
+      left: 0;
+      width: 33.33%;
+    }
+    .social-bluesky {
+      left: 33.33%;
+      width: 33.34%;
+    }
+    .social-github {
+      left: 66.67%;
+      width: 33.33%;
+    }
+    .mail {
+      margin: 16px 0 0;
+    }
+    #contact hr {
+      width: 50%;
+      margin: 20px auto 14px;
+    }
+    .best-viewed {
+      margin: 4px 0 0;
+      font-size: 15px;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .ticker marquee {
+        display: block;
+      }
+      .ticker-still {
+        display: none;
+      }
+      .new {
+        animation: l5y-blink 1s step-end infinite;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>🚧 Under Construction 🚧</h1>
-  <p>This brand-new presence on the <b>World Wide Web</b> has just been established.<br>
-     It is currently <blink>under construction</blink>. Please check back soon!</p>
-  <img src="./animated-under-construction-image-0053.gif" border="0" alt="Under Construction Sign" />
-  <hr>
-  <marquee scrollamount="4" behavior="alternate">Welcome to my homepage!</marquee>
-  <img src="./socials.png" width="480" height="206" usemap="#socials-map" alt="Social links logo" />
-  <map name="socials-map">
-    <area shape="rect" coords="0,0,160,206" href="https://www.reddit.com/user/l5yth/" alt="Reddit profile">
-    <area shape="rect" coords="160,0,320,206" href="https://bsky.app/profile/l5y.tech" alt="Bluesky profile">
-    <area shape="rect" coords="320,0,480,206" href="https://github.com/l5yth" alt="GitHub profile">
-  </map>
-  <p><a href="mailto:COM0@l5y.tech" target="_blank">📧 Click here to email me!</a>
-     (<a href="./com0.l5y.tech.pub.asc" target="_blank">PGP</a>)</p>
-  <hr>
-  <img src="./animated-mail-image-0311.gif" border="0" alt="Animated Mailboxes" />
-  <p>Sign my guestbook! (Coming soon)</p>
-  <p><i>This site best viewed with Netscape Navigator 3.0 or Internet Explorer 4.0+</i></p>
+  <header>
+    <div class="sign">
+      <div class="sign-inner">
+        <h1>COM0 on the Web</h1>
+        <p class="tagline">l5yth, freelance engineer</p>
+        <div class="ticker">
+          <marquee scrollamount="4">Welcome to my homepage! +++ New on the blog: Running Meshtastic Daemon on Raspberry Pi 4B +++</marquee>
+          <div class="ticker-still">Welcome to my homepage! +++ New on the blog: Running Meshtastic Daemon on Raspberry Pi 4B +++</div>
+        </div>
+      </div>
+    </div>
+    <nav class="buttons">
+      <a href="#about">About me</a>
+      <a href="#blog">Blog</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <section id="about" class="box">
+    <h2 class="label">About me</h2>
+    <p class="lead">Hi, I'm l5yth, a freelance engineer.</p>
+    <p class="pitch">I write software and run the hardware it lives on. My latest project is <a href="https://potatomesh.net">PotatoMesh</a>, a web dashboard for Meshtastic community meshes. Need an engineer? <a href="#contact">Get in touch</a>.</p>
+    <div class="skills">
+      <div class="skill">
+        <b>Web apps &amp; APIs</b>
+        <div class="chips">
+          <code>Ruby</code>
+          <code>Python</code>
+          <code>SQLite</code>
+        </div>
+      </div>
+      <div class="skill">
+        <b>Embedded Linux</b>
+        <div class="chips">
+          <code>Raspberry Pi</code>
+          <code>Arch Linux ARM</code>
+          <code>systemd</code>
+        </div>
+      </div>
+      <div class="skill">
+        <b>LoRa mesh networks</b>
+        <div class="chips">
+          <code>Meshtastic</code>
+          <code>protobufs</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="blog" class="box">
+    <h2 class="label">Latest blog posts</h2>
+    <span id="tag-meshtastic" class="tag-anchor"></span>
+    <span id="tag-linux" class="tag-anchor"></span>
+    <span id="tag-python" class="tag-anchor"></span>
+    <span id="tag-raspberry-pi" class="tag-anchor"></span>
+    <span id="tag-ruby" class="tag-anchor"></span>
+    <div class="filters">
+      <span class="filters-label">Filter by tag:</span>
+      <a class="f-all" href="#blog">all</a>
+      <a class="f-meshtastic" href="#tag-meshtastic">#meshtastic</a>
+      <a class="f-linux" href="#tag-linux">#linux</a>
+      <a class="f-python" href="#tag-python">#python</a>
+      <a class="f-raspberry-pi" href="#tag-raspberry-pi">#raspberry-pi</a>
+      <a class="f-ruby" href="#tag-ruby">#ruby</a>
+    </div>
+    <div class="entry t-meshtastic t-raspberry-pi t-linux">
+      <time>2025-10-03</time>
+      <div>
+        <a class="entry-title" href="./2025-09-meshtastic-daemon.html">Running Meshtastic Daemon on Raspberry Pi 4B</a> <span class="new">NEW!</span>
+        <div class="blurb">Building and running meshtasticd on ArchLinuxARM with a Waveshare SX1268 LoRa HAT.</div>
+        <div class="tags">
+          <a href="#tag-meshtastic">#meshtastic</a>
+          <a href="#tag-raspberry-pi">#raspberry-pi</a>
+          <a href="#tag-linux">#linux</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-meshtastic t-ruby t-python">
+      <time>2025-09-22</time>
+      <div>
+        <a class="entry-title" href="./2025-09-potato-mesh.html">PotatoMesh what and why</a>
+        <div class="blurb">How it works, how it plugs into Meshtastic, and how you can run your own.</div>
+        <div class="tags">
+          <a href="#tag-meshtastic">#meshtastic</a>
+          <a href="#tag-ruby">#ruby</a>
+          <a href="#tag-python">#python</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" class="box">
+    <h2 class="label">Contact</h2>
+    <div class="socials">
+      <img src="./socials.png" width="480" height="206" alt="Social links: Reddit, Bluesky, GitHub">
+      <a class="social-reddit" href="https://www.reddit.com/user/l5yth/" aria-label="Reddit profile"></a>
+      <a class="social-bluesky" href="https://bsky.app/profile/l5y.tech" aria-label="Bluesky profile"></a>
+      <a class="social-github" href="https://github.com/l5yth" aria-label="GitHub profile"></a>
+    </div>
+    <p class="mail"><a href="mailto:COM0@l5y.tech" target="_blank">📧 Click here to email me!</a> (<a href="./com0.l5y.tech.pub.asc" target="_blank">PGP</a>)</p>
+    <hr>
+    <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes">
+    <p class="best-viewed"><i>This site best viewed with Netscape Navigator 3.0 or Internet Explorer 4.0+</i></p>
+  </section>
 </body>
 </html>
