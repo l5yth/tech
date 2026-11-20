@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: 2026 l5yth
+SPDX-License-Identifier: Unlicense
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026-03 psn - a minimalist process navigator for Linux</title>
+  <meta name="description" content="You launch it, find the process, and send it a signal; all without leaving the terminal or typing a PID by hand.">
+  <meta name="author" content="l5yth">
+  <meta name="keywords" content="rust, linux, tui">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="psn - a minimalist process navigator for Linux">
+  <meta property="og:description" content="You launch it, find the process, and send it a signal; all without leaving the terminal or typing a PID by hand.">
+  <meta property="article:published_time" content="2026-03-07">
+  <meta property="article:tag" content="rust">
+  <meta property="article:tag" content="linux">
+  <meta property="article:tag" content="tui">
+  <link rel="canonical" href="https://dev.to/l5y/psn-a-minimalist-process-navigator-for-linux-37jn">
+  <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "BlogPosting", "headline": "psn - a minimalist process navigator for Linux", "description": "You launch it, find the process, and send it a signal; all without leaving the terminal or typing a PID by hand.", "datePublished": "2026-03-07", "keywords": "rust, linux, tui", "author": { "@type": "Person", "name": "l5yth" } }</script>
+  <style>
+    body {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 16px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      background: #c2c09f url(./tile.png);
+      color: #111;
+      font: 18px/1.5 "Times New Roman", serif;
+    }
+    a:link {
+      color: #0000ee;
+    }
+    a:visited {
+      color: #551a8b;
+    }
+    a:hover {
+      color: #ff0000;
+    }
+
+    /* Masthead: the small sign links home, the buttons jump into it. */
+    header a.sign {
+      display: block;
+      text-decoration: none;
+      color: #efff02;
+      border: 6px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #efff02 0 6px, #000 6px 12px) border-box;
+      padding: 4px;
+    }
+    .sign-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 4px 16px;
+      border: 1px solid #efff02;
+      padding: 10px 14px;
+    }
+    .sign-title {
+      font: bold 22px/1.1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .sign-tagline {
+      font: bold 11px/1.4 Verdana, Geneva, sans-serif;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    nav.buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    nav.buttons a {
+      background: #d3d3d3;
+      color: #111;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      text-decoration: none;
+      padding: 8px 18px;
+      border: 1px solid;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    nav.buttons a:active {
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+      box-shadow: inset 1px 1px 0 #797a7a;
+    }
+
+    /* The article box, its hazard-striped label, title and tags. */
+    article.post {
+      position: relative;
+      background: #fdf5e6;
+      border: 3px double #8b4513;
+      padding: 36px 28px 24px;
+    }
+    .label {
+      position: absolute;
+      top: -15px;
+      left: 18px;
+      border: 3px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #f0e010 0 3px, #000 3px 6px) border-box;
+      color: #40a0f0;
+      text-shadow: 0 0 5px #40a0f0;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+    }
+    article.post h1 {
+      margin: 0 0 8px;
+      font: bold 34px/1.15 Georgia, serif;
+      text-wrap: balance;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 12px;
+      margin: 0 0 22px;
+    }
+    article.post .tags a {
+      font: 13px monospace;
+      color: #8b4513;
+      text-decoration: none;
+    }
+    article.post .tags a:hover {
+      text-decoration: underline;
+    }
+
+    /* The post body: its markup is unchanged, only these rules restyle it. */
+    article.post hr {
+      margin: 28px 0;
+    }
+    article.post h2 {
+      font: bold 24px/1.25 Georgia, serif;
+      margin: 1.5em 0 .5em;
+    }
+    article.post h3 {
+      font: bold 19px/1.3 Georgia, serif;
+      margin: 1.3em 0 .4em;
+    }
+    article.post .lede {
+      font-weight: bold;
+    }
+    article.post code {
+      font: 14px/1.4 monospace;
+      background: #fffaf0;
+      padding: 0 3px;
+      border: 1px dotted #d2b48c;
+    }
+    article.post pre {
+      background: #000;
+      color: #0f0;
+      padding: 12px 14px;
+      overflow-x: auto;
+      font: 13px/1.5 monospace;
+      margin: 1em 0;
+      border: 1px solid;
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+    }
+    article.post pre code {
+      font: inherit;
+      background: none;
+      padding: 0;
+      border: 0;
+    }
+    article.post table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+    article.post th,
+    article.post td {
+      border-bottom: 1px solid #d2b48c;
+      padding: 6px;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: break-word;
+    }
+
+    /* Figures: a caption above its table, listing or image. */
+    article.post figure {
+      margin: 1em 0;
+    }
+    article.post figure pre {
+      margin: 0;
+    }
+    article.post figcaption {
+      margin: 0 0 .5em;
+    }
+    article.post figure img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* An image in running text never widens the column either. */
+    article.post img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Footer inside the article: rule, mailbox GIF, the way home. */
+    article.post footer {
+      text-align: center;
+      font-style: italic;
+      margin-top: 34px;
+    }
+    article.post footer hr {
+      width: 50%;
+      margin: 0 auto 18px;
+    }
+
+    /* Narrow screens: long code wraps, and a wide table scrolls in its own box. */
+    @media (max-width: 600px) {
+      article.post td code {
+        overflow-wrap: anywhere;
+      }
+      article.post table {
+        display: block;
+        overflow-x: auto;
+      }
+      article.post code {
+        overflow-wrap: break-word;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="sign" href="./index.html">
+      <span class="sign-inner">
+        <span class="sign-title">COM0 on the Web</span>
+        <span class="sign-tagline">l5yth, freelance engineer</span>
+      </span>
+    </a>
+    <nav class="buttons">
+      <a href="./index.html#about">About me</a>
+      <a href="./index.html#blog">Blog</a>
+      <a href="./index.html#contact">Contact</a>
+    </nav>
+  </header>
+
+  <article class="post">
+    <div class="label">Blog / 2026-03-07</div>
+    <h1>psn - a minimalist process navigator for Linux</h1>
+    <div class="tags">
+      <a href="./index.html#tag-rust">#rust</a>
+      <a href="./index.html#tag-linux">#linux</a>
+      <a href="./index.html#tag-tui">#tui</a>
+    </div>
+    <p><i>Originally published on <a href="https://dev.to/l5y/psn-a-minimalist-process-navigator-for-linux-37jn">dev.to</a>.</i></p>
+    <p>When a process hangs up on me on a server, my usual workflow is a mix of <code>ps aux | grep</code>, <code>pgrep</code>, copying PIDs, and reaching for <code>kill</code>. It works, but it interrupts my workflows. I decided to go for a little <em>quality-of-life</em> upgrade and implement <code>psn</code>, the <em>process status navigator</em>.</p>
+    <p><a href="https://github.com/l5yth/psn">psn</a> is a small Rust TUI. You launch it, find the process, and send it a signal; all without leaving the terminal or typing a PID by hand.</p>
+    <p><a href="https://asciinema.org/a/820051"><img src="./2026-03-psn-demo.png" width="1062" height="635" alt="asciicast"></a></p>
+
+    <h2>The problem it solves</h2>
+    <p>The command-line is where I spend most of my time and earn a living: personal laptops, remote servers, etc. The tooling story for process management is surprisingly fragile. I started to become a power user of <code>btop</code>, my favorite <em>*top-derivate,</em> but kept falling back to <code>ps</code> when I had to deal with processes. However, its output is a wall of text that you have to mentally parse or pipe through <code>grep</code> and then act on with a subsequent command.</p>
+    <p>The real need is simple: find a process by name and send it a signal. It cannot be so hard? ;)</p>
+
+    <h2>What it does</h2>
+    <p><code>psn</code> displays a table of running processes inside a navigatable terminal user interface. Each row of the table shows the process name, PID, user, CPU and memory usage, status, and the full command string. Processes are arranged in a parent&#8211;child tree so you can see what spawned what.</p>
+    <p>From there you can:</p>
+    <ul>
+      <li>Navigate with arrow keys up/down and page up/down</li>
+      <li>Collapse and expand subtrees with arrow keys left/right</li>
+      <li>Filter on the fly by pressing <code>/</code> and typing - the list narrows as you type, and matched text is highlighted in the name and command columns</li>
+      <li>Pre-filter at launch by passing a substring (<code>psn cargo</code>) or a regular expression (<code>psn -r '^rust'</code>) as an argument</li>
+      <li>Send a signal by pressing <code>1</code> through <code>9</code>; the key maps directly to the Unix signal number - <code>9</code> is SIGKILL, <code>1</code> is SIGHUP, <code>2</code> is SIGINT, and so on</li>
+    </ul>
+    <p>That's it. I didn't ask for more and I also don't think it needs more.</p>
+
+    <h2>Installation</h2>
+    <p>The fastest path is via <a href="https://crates.io/crates/psn">crates.io</a>:</p>
+    <pre><code>cargo install psn
+</code></pre>
+    <p>On Arch Linux the <a href="https://aur.archlinux.org/packages/psn-bin">psn-bin</a> AUR package installs a prebuilt binary:</p>
+    <pre><code>yay -S psn-bin
+</code></pre>
+    <p>Or build from the <a href="https://github.com/l5yth/psn">GitHub repository</a> directly with <code>cargo build --release</code>. A <a href="https://github.com/l5yth/psn/blob/main/flake.nix">Nix flake</a> and a <a href="https://github.com/l5yth/psn/tree/main/packaging/gentoo">Gentoo ebuild</a> are also available.</p>
+    <p>The only runtime dependency is a GNU/Linux system with <code>procfs</code> support. No <code>ps</code> wrapper, no external binaries - process data is read directly via <a href="https://crates.io/crates/sysinfo">sysinfo</a>.</p>
+    <p>If you spend any meaningful time on Linux servers and find yourself reaching for <code>ps | grep | kill</code> more than you'd like, give <code>psn</code> a try. Feedback and issues are welcome!</p>
+    <footer>
+      <hr>
+      <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes">
+      <div><a href="./index.html">Back to COM0 on the Web</a></div>
+    </footer>
+  </article>
+</body>
+</html>

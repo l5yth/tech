@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: 2026 l5yth
+SPDX-License-Identifier: Unlicense
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026-03 Running MeshCore Repeater Natively on a Raspberry Pi</title>
+  <meta name="description" content="A Raspberry Pi running a MeshCore repeater or companion is a natural home for bots, bridges, and integrations.">
+  <meta name="author" content="l5yth">
+  <meta name="keywords" content="meshcore, lora, linux">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Running MeshCore Repeater Natively on a Raspberry Pi">
+  <meta property="og:description" content="A Raspberry Pi running a MeshCore repeater or companion is a natural home for bots, bridges, and integrations.">
+  <meta property="article:published_time" content="2026-03-15">
+  <meta property="article:tag" content="meshcore">
+  <meta property="article:tag" content="lora">
+  <meta property="article:tag" content="linux">
+  <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "BlogPosting", "headline": "Running MeshCore Repeater Natively on a Raspberry Pi", "description": "A Raspberry Pi running a MeshCore repeater or companion is a natural home for bots, bridges, and integrations.", "datePublished": "2026-03-15", "keywords": "meshcore, lora, linux", "author": { "@type": "Person", "name": "l5yth" } }</script>
+  <style>
+    body {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 16px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      background: #c2c09f url(./tile.png);
+      color: #111;
+      font: 18px/1.5 "Times New Roman", serif;
+    }
+    a:link {
+      color: #0000ee;
+    }
+    a:visited {
+      color: #551a8b;
+    }
+    a:hover {
+      color: #ff0000;
+    }
+
+    /* Masthead: the small sign links home, the buttons jump into it. */
+    header a.sign {
+      display: block;
+      text-decoration: none;
+      color: #efff02;
+      border: 6px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #efff02 0 6px, #000 6px 12px) border-box;
+      padding: 4px;
+    }
+    .sign-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 4px 16px;
+      border: 1px solid #efff02;
+      padding: 10px 14px;
+    }
+    .sign-title {
+      font: bold 22px/1.1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .sign-tagline {
+      font: bold 11px/1.4 Verdana, Geneva, sans-serif;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    nav.buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    nav.buttons a {
+      background: #d3d3d3;
+      color: #111;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      text-decoration: none;
+      padding: 8px 18px;
+      border: 1px solid;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    nav.buttons a:active {
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+      box-shadow: inset 1px 1px 0 #797a7a;
+    }
+
+    /* The article box, its hazard-striped label, title and tags. */
+    article.post {
+      position: relative;
+      background: #fdf5e6;
+      border: 3px double #8b4513;
+      padding: 36px 28px 24px;
+    }
+    .label {
+      position: absolute;
+      top: -15px;
+      left: 18px;
+      border: 3px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #f0e010 0 3px, #000 3px 6px) border-box;
+      color: #40a0f0;
+      text-shadow: 0 0 5px #40a0f0;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+    }
+    article.post h1 {
+      margin: 0 0 8px;
+      font: bold 34px/1.15 Georgia, serif;
+      text-wrap: balance;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 12px;
+      margin: 0 0 22px;
+    }
+    article.post .tags a {
+      font: 13px monospace;
+      color: #8b4513;
+      text-decoration: none;
+    }
+    article.post .tags a:hover {
+      text-decoration: underline;
+    }
+
+    /* The post body: its markup is unchanged, only these rules restyle it. */
+    article.post hr {
+      margin: 28px 0;
+    }
+    article.post h2 {
+      font: bold 24px/1.25 Georgia, serif;
+      margin: 1.5em 0 .5em;
+    }
+    article.post h3 {
+      font: bold 19px/1.3 Georgia, serif;
+      margin: 1.3em 0 .4em;
+    }
+    article.post .lede {
+      font-weight: bold;
+    }
+    article.post code {
+      font: 14px/1.4 monospace;
+      background: #fffaf0;
+      padding: 0 3px;
+      border: 1px dotted #d2b48c;
+    }
+    article.post pre {
+      background: #000;
+      color: #0f0;
+      padding: 12px 14px;
+      overflow-x: auto;
+      font: 13px/1.5 monospace;
+      margin: 1em 0;
+      border: 1px solid;
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+    }
+    article.post pre code {
+      font: inherit;
+      background: none;
+      padding: 0;
+      border: 0;
+    }
+    article.post table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+    article.post th,
+    article.post td {
+      border-bottom: 1px solid #d2b48c;
+      padding: 6px;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: break-word;
+    }
+
+    /* Figures: a caption above its table, listing or image. */
+    article.post figure {
+      margin: 1em 0;
+    }
+    article.post figure pre {
+      margin: 0;
+    }
+    article.post figcaption {
+      margin: 0 0 .5em;
+    }
+    article.post figure img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* An image in running text never widens the column either. */
+    article.post img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Footer inside the article: rule, mailbox GIF, the way home. */
+    article.post footer {
+      text-align: center;
+      font-style: italic;
+      margin-top: 34px;
+    }
+    article.post footer hr {
+      width: 50%;
+      margin: 0 auto 18px;
+    }
+
+    /* Narrow screens: long code wraps, and a wide table scrolls in its own box. */
+    @media (max-width: 600px) {
+      article.post td code {
+        overflow-wrap: anywhere;
+      }
+      article.post table {
+        display: block;
+        overflow-x: auto;
+      }
+      article.post code {
+        overflow-wrap: break-word;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="sign" href="./index.html">
+      <span class="sign-inner">
+        <span class="sign-title">COM0 on the Web</span>
+        <span class="sign-tagline">l5yth, freelance engineer</span>
+      </span>
+    </a>
+    <nav class="buttons">
+      <a href="./index.html#about">About me</a>
+      <a href="./index.html#blog">Blog</a>
+      <a href="./index.html#contact">Contact</a>
+    </nav>
+  </header>
+
+  <article class="post">
+    <div class="label">Blog / 2026-03-15</div>
+    <h1>Running MeshCore Repeater Natively on a Raspberry Pi</h1>
+    <div class="tags">
+      <a href="./index.html#tag-meshcore">#meshcore</a>
+      <a href="./index.html#tag-lora">#lora</a>
+      <a href="./index.html#tag-linux">#linux</a>
+    </div>
+    <p>MeshCore is a lean, multi-hop LoRa mesh networking stack. It runs on the usual embedded devices: ESP32, nRF52, RP2040, etc., but the interesting use-case for Linux users is running it on a Raspberry Pi with an SX1262 LoRa HAT or similar hardware attached directly.</p>
+    <p>This post covers a native Linux target I have built, and how it works.</p>
+
+    <h2>Why Linux native</h2>
+    <p>The practical motivation is simple: a Raspberry Pi running a MeshCore repeater or companion is a natural home for bots, bridges, and integrations. I want to run a Python bot that speaks to the mesh, scheduling announcements or responding to questions: No problem if I can embed it directly as a Linux system service and use the entire toolbox that the operating system offers, no cables or bluetooth required.</p>
+    <p>The work currently lives in my fork at <a href="https://github.com/l5yth/meshcore-linux">github.com/l5yth/meshcore-linux</a> (branch <code>linux</code>) and is pending upstream review at <a href="https://github.com/meshcore-dev/MeshCore/pull/2025">meshcore-dev/MeshCore#2025</a>. It is the continuation of previous work by Alex (#395) and Grzegorz (#1137).</p>
+
+    <h2>What has been implemented</h2>
+    <p><strong>A single self-contained binary <code>meshcored</code>.</strong> Build with PlatformIO, copy to or compile on the Pi, point it at an INI config file. No Arduino framework install, no Portduino runtime, no package manager headaches beyond <code>libgpiod</code> and kernel SPI/GPIO headers.</p>
+    <p><strong>Hardware abstraction via standard Linux interfaces.</strong> SPI is handled through <code>/dev/spidev</code>, GPIO through libgpiod v2, timing through <code>clock_gettime</code>. The SX1262 radio, a Waveshare LoRa HAT, a PoW HAT, or any wired equivalent, talks to the kernel the same way any other Linux SPI device does.</p>
+    <p><strong>Full repeater functionality.</strong> The <code>linux_repeater</code> firmware is a direct build of the <code>simple_repeater</code> example: flood routing, direct routing, AES-128 encrypted packets, duty-cycle enforcement, neighbour tracking.</p>
+    <p><strong>Runtime configuration.</strong> All radio parameters, GPIO pin assignments, node name, and admin password live in a plain INI file read on every startup. No reflashing to change frequency or spreading factor. The node identity and user-facing preferences (name, password, region) are persisted separately in a data directory and survive restarts. After first start, you can use this to also remotely manage the repeater.</p>
+    <p><strong>systemd integration.</strong> A drop-in service unit is included. The binary runs as a dedicated <code>meshcore</code> user, logs to the journal, and restarts on failure.</p>
+
+    <h2>How to install <code>meshcored</code></h2>
+    <p>Clone <a href="https://github.com/l5yth/meshcore-linux">github.com/l5yth/meshcore-linux</a>, install PlatformIO, then:</p>
+    <pre><code>FIRMWARE_VERSION=1.14.1-linux ./build.sh build-firmware linux_repeater
+</code></pre>
+    <p>The output binary can be found at <code>.pio/build/linux_repeater/program</code>. Copy it to <code>/usr/bin/meshcored</code> on the Pi.</p>
+
+    <h3>Configure SPI and GPIO</h3>
+    <p>Drop a <code>meshcored.ini</code> at <code>/etc/meshcored/meshcored.ini</code>. A minimal working config for a Waveshare SX1262 HAT (using UK/Narrow preset):</p>
+    <pre><code>spidev = /dev/spidev0.0
+gpiochip = /dev/gpiochip0
+lora_irq_pin = 16
+lora_reset_pin = 18
+lora_nss_pin = 21
+lora_busy_pin = 20
+lora_freq = 869.618
+lora_bw = 62.5
+lora_sf = 8
+lora_cr = 8
+advert_name = MyRaspberryPi
+admin_password = change,me,1234
+</code></pre>
+    <p>For a PoW SX1262 HAT on a Zero 2W, swap in <code>lora_irq_pin = 22</code> and <code>lora_reset_pin = 13</code> and remove the NSS/BUSY lines (those pins are wired on the HAT but handled transparently).</p>
+    <p>On Raspberry Pi 5, the GPIO controller moved, set <code>gpiochip = /dev/gpiochip4</code>.</p>
+
+    <h3>Run interactively or as system service</h3>
+    <p>And then just run <code>meshcored</code> to test everything works, it should tell you about the radio settings, the public key, and logs about adverts and noise floor.</p>
+    <pre><code>meshcored --fsdir /var/lib/meshcore
+</code></pre>
+    <p>For production, create a <code>meshcore</code> user, install the udev rules from <code>variants/linux/99-meshcore.rules</code>, install the systemd unit from <code>variants/linux/meshcored.service</code> and enable it:</p>
+    <pre><code>systemctl enable --now meshcored
+journalctl -u meshcored -f
+</code></pre>
+
+    <h3>First Boot and CLI</h3>
+    <p>On first boot the node generates a new ed25519 identity and writes it to <code>--fsdir</code>. The INI values for <code>advert_name</code>, <code>admin_password</code>, and radio parameters are applied as initial defaults, then saved to <code>com_prefs</code>. On subsequent boots, <code>com_prefs</code> takes precedence, so INI changes to those fields have no effect after first run.</p>
+    <p>To reset and re-apply the INI: remove <code>com_prefs</code> from the data directory and restart.</p>
+    <p>To change parameters at runtime without resetting, use the mesh CLI over a connected phone app or serial interface, <code>set freq</code>, <code>set sf</code>, <code>set name</code>, etc. Changes are persisted immediately.</p>
+    <p>And that's it. Let me know <a href="./index.html#contact">by email</a> if you are also running MeshCore on a Raspberry Pi or similar Linux devices!</p>
+    <p>The fork at <a href="https://github.com/l5yth/meshcore-linux">github.com/l5yth/meshcore-linux</a> is the reference for the native Linux target while the upstream PR review is ongoing. Watch <a href="https://github.com/meshcore-dev/MeshCore/pull/2025">meshcore-dev/MeshCore#2025</a> for merge status.</p>
+
+    <hr>
+
+    <p><em>Built and tested on Raspberry Pi Zero 2W and Pi 4 with Waveshare and PoW SX1262 HATs.</em></p>
+    <footer>
+      <hr>
+      <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes">
+      <div><a href="./index.html">Back to COM0 on the Web</a></div>
+    </footer>
+  </article>
+</body>
+</html>

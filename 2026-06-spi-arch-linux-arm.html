@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: 2026 l5yth
+SPDX-License-Identifier: Unlicense
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026-06 Enabling SPI on Arch Linux ARM (Raspberry Pi 4, aarch64)</title>
+  <meta name="description" content="Switch to the Foundation kernel (linux-rpi) and SPI + overlays work natively.">
+  <meta name="author" content="l5yth">
+  <meta name="keywords" content="raspberry-pi, arch-linux, linux">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Enabling SPI on Arch Linux ARM (Raspberry Pi 4, aarch64)">
+  <meta property="og:description" content="Switch to the Foundation kernel (linux-rpi) and SPI + overlays work natively.">
+  <meta property="article:published_time" content="2026-06-01">
+  <meta property="article:tag" content="raspberry-pi">
+  <meta property="article:tag" content="arch-linux">
+  <meta property="article:tag" content="linux">
+  <link rel="canonical" href="https://dev.to/l5y/enabling-spi-on-arch-linux-arm-raspberry-pi-4-aarch64-ci4">
+  <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "BlogPosting", "headline": "Enabling SPI on Arch Linux ARM (Raspberry Pi 4, aarch64)", "description": "Switch to the Foundation kernel (linux-rpi) and SPI + overlays work natively.", "datePublished": "2026-06-01", "keywords": "raspberry-pi, arch-linux, linux", "author": { "@type": "Person", "name": "l5yth" } }</script>
+  <style>
+    body {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 16px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      background: #c2c09f url(./tile.png);
+      color: #111;
+      font: 18px/1.5 "Times New Roman", serif;
+    }
+    a:link {
+      color: #0000ee;
+    }
+    a:visited {
+      color: #551a8b;
+    }
+    a:hover {
+      color: #ff0000;
+    }
+
+    /* Masthead: the small sign links home, the buttons jump into it. */
+    header a.sign {
+      display: block;
+      text-decoration: none;
+      color: #efff02;
+      border: 6px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #efff02 0 6px, #000 6px 12px) border-box;
+      padding: 4px;
+    }
+    .sign-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 4px 16px;
+      border: 1px solid #efff02;
+      padding: 10px 14px;
+    }
+    .sign-title {
+      font: bold 22px/1.1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .sign-tagline {
+      font: bold 11px/1.4 Verdana, Geneva, sans-serif;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    nav.buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    nav.buttons a {
+      background: #d3d3d3;
+      color: #111;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      text-decoration: none;
+      padding: 8px 18px;
+      border: 1px solid;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    nav.buttons a:active {
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+      box-shadow: inset 1px 1px 0 #797a7a;
+    }
+
+    /* The article box, its hazard-striped label, title and tags. */
+    article.post {
+      position: relative;
+      background: #fdf5e6;
+      border: 3px double #8b4513;
+      padding: 36px 28px 24px;
+    }
+    .label {
+      position: absolute;
+      top: -15px;
+      left: 18px;
+      border: 3px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #f0e010 0 3px, #000 3px 6px) border-box;
+      color: #40a0f0;
+      text-shadow: 0 0 5px #40a0f0;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+    }
+    article.post h1 {
+      margin: 0 0 8px;
+      font: bold 34px/1.15 Georgia, serif;
+      text-wrap: balance;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 12px;
+      margin: 0 0 22px;
+    }
+    article.post .tags a {
+      font: 13px monospace;
+      color: #8b4513;
+      text-decoration: none;
+    }
+    article.post .tags a:hover {
+      text-decoration: underline;
+    }
+
+    /* The post body: its markup is unchanged, only these rules restyle it. */
+    article.post hr {
+      margin: 28px 0;
+    }
+    article.post h2 {
+      font: bold 24px/1.25 Georgia, serif;
+      margin: 1.5em 0 .5em;
+    }
+    article.post h3 {
+      font: bold 19px/1.3 Georgia, serif;
+      margin: 1.3em 0 .4em;
+    }
+    article.post .lede {
+      font-weight: bold;
+    }
+    article.post code {
+      font: 14px/1.4 monospace;
+      background: #fffaf0;
+      padding: 0 3px;
+      border: 1px dotted #d2b48c;
+    }
+    article.post pre {
+      background: #000;
+      color: #0f0;
+      padding: 12px 14px;
+      overflow-x: auto;
+      font: 13px/1.5 monospace;
+      margin: 1em 0;
+      border: 1px solid;
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+    }
+    article.post pre code {
+      font: inherit;
+      background: none;
+      padding: 0;
+      border: 0;
+    }
+    article.post table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+    article.post th,
+    article.post td {
+      border-bottom: 1px solid #d2b48c;
+      padding: 6px;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: break-word;
+    }
+
+    /* Figures: a caption above its table, listing or image. */
+    article.post figure {
+      margin: 1em 0;
+    }
+    article.post figure pre {
+      margin: 0;
+    }
+    article.post figcaption {
+      margin: 0 0 .5em;
+    }
+    article.post figure img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* An image in running text never widens the column either. */
+    article.post img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Footer inside the article: rule, mailbox GIF, the way home. */
+    article.post footer {
+      text-align: center;
+      font-style: italic;
+      margin-top: 34px;
+    }
+    article.post footer hr {
+      width: 50%;
+      margin: 0 auto 18px;
+    }
+
+    /* Narrow screens: long code wraps, and a wide table scrolls in its own box. */
+    @media (max-width: 600px) {
+      article.post td code {
+        overflow-wrap: anywhere;
+      }
+      article.post table {
+        display: block;
+        overflow-x: auto;
+      }
+      article.post code {
+        overflow-wrap: break-word;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="sign" href="./index.html">
+      <span class="sign-inner">
+        <span class="sign-title">COM0 on the Web</span>
+        <span class="sign-tagline">l5yth, freelance engineer</span>
+      </span>
+    </a>
+    <nav class="buttons">
+      <a href="./index.html#about">About me</a>
+      <a href="./index.html#blog">Blog</a>
+      <a href="./index.html#contact">Contact</a>
+    </nav>
+  </header>
+
+  <article class="post">
+    <div class="label">Blog / 2026-06-01</div>
+    <h1>Enabling SPI on Arch Linux ARM (Raspberry Pi 4, aarch64)</h1>
+    <div class="tags">
+      <a href="./index.html#tag-raspberry-pi">#raspberry-pi</a>
+      <a href="./index.html#tag-arch-linux">#arch-linux</a>
+      <a href="./index.html#tag-linux">#linux</a>
+    </div>
+    <p><i>Originally published on <a href="https://dev.to/l5y/enabling-spi-on-arch-linux-arm-raspberry-pi-4-aarch64-ci4">dev.to</a>.</i></p>
+    <p><em>You add <code>dtparam=spi=on</code> to <code>/boot/config.txt</code>, reboot, and... there's no <code>/dev/spidev*</code>. On the <strong>AArch64</strong> Arch Linux ARM image this is expected, and the fix isn't more <code>config.txt</code> tweaking. Here's the clean way.</em></p>
+
+    <h2>TL;DR</h2>
+    <p>The AArch64 ALARM image boots the <strong>mainline kernel via U-Boot</strong>, which ignores <code>config.txt</code>. Switch to the <strong>Foundation kernel (<code>linux-rpi</code>)</strong> and SPI + overlays work natively. One board-specific trap to watch: the shipped <code>cmdline.txt</code> has the wrong <code>root=</code>.</p>
+    <blockquote>
+      <p>&#8505;&#65039; Tested on: Raspberry Pi 4B, Arch Linux ARM aarch64, <code>/boot</code> on a separate FAT partition.</p>
+    </blockquote>
+
+    <h2>Why <code>dtparam=spi=on</code> does nothing</h2>
+    <p>The GPU firmware reads <code>config.txt</code> and patches <em>its own</em> device tree, but U-Boot then loads a <strong>different</strong> mainline DTB from <code>/boot/dtbs</code> and boots that, throwing the firmware's edit away. Forcing the firmware DTB doesn't help either: the mainline <code>spidev</code> driver won't bind to its <code>compatible = "spidev"</code> nodes.</p>
+    <p>The Foundation kernel sidesteps all of it: the firmware boots it <strong>directly</strong> and applies <code>config.txt</code> + overlays the way every Pi guide assumes.</p>
+    <blockquote>
+      <p>&#9888;&#65039; This swaps your kernel and removes U-Boot. Keep a serial/HDMI console or SD-card access handy in case of a bad boot.</p>
+    </blockquote>
+
+    <h2>0. Prep</h2>
+    <pre><code># Note your real root partition, you'll need this exact value in step 2.
+cat /proc/cmdline                       # grab the root=PARTUUID=... part
+lsblk -o NAME,PARTUUID,MOUNTPOINT
+
+# Back up /boot and cache the current packages for rollback.
+sudo tar czf /root/boot-backup.tar.gz -C /boot .
+sudo pacman -Sw linux-aarch64 uboot-raspberrypi
+</code></pre>
+
+    <h2>1. Install the Foundation kernel</h2>
+    <pre><code>sudo pacman -S linux-rpi
+</code></pre>
+    <p>It <strong>conflicts with <code>uboot-raspberrypi</code> and <code>linux-aarch64</code></strong> and removes both, that's expected. It drops in the Foundation kernel as <code>/boot/kernel8.img</code>, ~360 overlays, and fresh <code>config.txt</code> / <code>cmdline.txt</code>.</p>
+
+    <h2>2. Fix <code>cmdline.txt</code>, the one guaranteed gotcha</h2>
+    <p>The shipped <code>/boot/cmdline.txt</code> hardcodes <code>root=/dev/mmcblk0p2</code>. If your card enumerates differently (mine is <code>mmcblk1</code>), that's an instant no-boot. Replace the <code>root=</code> with <strong>your</strong> value from step 0:</p>
+    <pre><code># /boot/cmdline.txt  (single line)
+root=PARTUUID=xxxxxxxx-02 rw rootwait fsck.repair=yes console=serial0,115200 console=tty1
+</code></pre>
+    <p>Use <code>blkid</code> to determine UUID.</p>
+
+    <h2>3. Re-enable SPI in <code>config.txt</code></h2>
+    <p>The new <code>config.txt</code> ships with SPI commented out. Add:</p>
+    <pre><code># /boot/config.txt
+enable_uart=1
+dtparam=spi=on
+</code></pre>
+
+    <h2>4. Sanity-check before rebooting</h2>
+    <p>Can't hurt to run <code>mkinitcpio -p linux-rpi</code> again.</p>
+    <pre><code>ls -l /boot/kernel8.img            # multi-MB = Foundation kernel (U-Boot was ~700 KB)
+grep root= /boot/cmdline.txt       # YOUR PARTUUID, not mmcblk0p2
+grep -E 'spi|initramfs' /boot/config.txt
+ls -l /boot/initramfs-linux.img    # freshly rebuilt
+ls /lib/modules/                   # e.g. 6.x-rpi
+</code></pre>
+
+    <h2>5. Reboot &amp; verify</h2>
+    <pre><code>sudo reboot
+# once it's back:
+uname -r                           # ...-rpi
+ls -l /dev/spidev*                 # spidev0.0  spidev0.1
+</code></pre>
+
+    <h2>6. Optional: use SPI without root</h2>
+    <pre><code># /etc/udev/rules.d/99-spi.rules
+SUBSYSTEM=="spidev", GROUP="spi", MODE="0660"
+</code></pre>
+    <pre><code>sudo groupadd -f spi &amp;&amp; sudo usermod -aG spi "$USER"   # re-login to apply
+</code></pre>
+    <p>Quick loopback test: jumper <strong>pin 19 &#8596; pin 21</strong> (MOSI&#8596;MISO) and run <code>spidev_test</code>, TX should equal RX.</p>
+
+    <h2>SPI0 pinout (40-pin header)</h2>
+    <table>
+      <thead>
+        <tr><th>Signal</th><th>BCM</th><th>Pin</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>MOSI</td><td>GPIO10</td><td>19</td></tr>
+        <tr><td>MISO</td><td>GPIO9</td><td>21</td></tr>
+        <tr><td>SCLK</td><td>GPIO11</td><td>23</td></tr>
+        <tr><td>CE0</td><td>GPIO8</td><td>24 &#8594; <code>spidev0.0</code></td></tr>
+        <tr><td>CE1</td><td>GPIO7</td><td>26 &#8594; <code>spidev0.1</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2>Rollback</h2>
+    <p>If it won't boot: pull the SD card, restore <code>/boot</code> from <code>boot-backup.tar.gz</code>, and reinstall <code>linux-aarch64</code> + <code>uboot-raspberrypi</code> from the pacman cache.</p>
+    <p><strong>Bonus:</strong> now that the firmware honors <code>config.txt</code>, other peripherals are one line away too, <code>dtparam=i2c_arm=on</code> for I2C, or any overlay in <code>/boot/overlays</code> via <code>dtoverlay=...</code>. No device-tree surgery required.</p>
+    <footer>
+      <hr>
+      <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes">
+      <div><a href="./index.html">Back to COM0 on the Web</a></div>
+    </footer>
+  </article>
+</body>
+</html>
