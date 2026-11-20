@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: 2026 l5yth
+SPDX-License-Identifier: Unlicense
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026-06 ArduLinux: running Arduino firmware on Linux</title>
+  <meta name="description" content="A clean-room continuation of portduino, why I forked it instead of fixing it in place, and what falls out when you stop patching your dependencies.">
+  <meta name="author" content="l5yth">
+  <meta name="keywords" content="arduino, linux, cpp">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="ArduLinux: running Arduino firmware on Linux">
+  <meta property="og:description" content="A clean-room continuation of portduino, why I forked it instead of fixing it in place, and what falls out when you stop patching your dependencies.">
+  <meta property="article:published_time" content="2026-06-01">
+  <meta property="article:tag" content="arduino">
+  <meta property="article:tag" content="linux">
+  <meta property="article:tag" content="cpp">
+  <link rel="canonical" href="https://dev.to/l5y/ardulinux-running-arduino-firmware-on-linux-2ong">
+  <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "BlogPosting", "headline": "ArduLinux: running Arduino firmware on Linux", "description": "A clean-room continuation of portduino, why I forked it instead of fixing it in place, and what falls out when you stop patching your dependencies.", "datePublished": "2026-06-01", "keywords": "arduino, linux, cpp", "author": { "@type": "Person", "name": "l5yth" } }</script>
+  <style>
+    body {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 16px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      background: #c2c09f url(./tile.png);
+      color: #111;
+      font: 18px/1.5 "Times New Roman", serif;
+    }
+    a:link {
+      color: #0000ee;
+    }
+    a:visited {
+      color: #551a8b;
+    }
+    a:hover {
+      color: #ff0000;
+    }
+
+    /* Masthead: the small sign links home, the buttons jump into it. */
+    header a.sign {
+      display: block;
+      text-decoration: none;
+      color: #efff02;
+      border: 6px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #efff02 0 6px, #000 6px 12px) border-box;
+      padding: 4px;
+    }
+    .sign-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 4px 16px;
+      border: 1px solid #efff02;
+      padding: 10px 14px;
+    }
+    .sign-title {
+      font: bold 22px/1.1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .sign-tagline {
+      font: bold 11px/1.4 Verdana, Geneva, sans-serif;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    nav.buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    nav.buttons a {
+      background: #d3d3d3;
+      color: #111;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      text-decoration: none;
+      padding: 8px 18px;
+      border: 1px solid;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    nav.buttons a:active {
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+      box-shadow: inset 1px 1px 0 #797a7a;
+    }
+
+    /* The article box, its hazard-striped label, title and tags. */
+    article.post {
+      position: relative;
+      background: #fdf5e6;
+      border: 3px double #8b4513;
+      padding: 36px 28px 24px;
+    }
+    .label {
+      position: absolute;
+      top: -15px;
+      left: 18px;
+      border: 3px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #f0e010 0 3px, #000 3px 6px) border-box;
+      color: #40a0f0;
+      text-shadow: 0 0 5px #40a0f0;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+    }
+    article.post h1 {
+      margin: 0 0 8px;
+      font: bold 34px/1.15 Georgia, serif;
+      text-wrap: balance;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 12px;
+      margin: 0 0 22px;
+    }
+    article.post .tags a {
+      font: 13px monospace;
+      color: #8b4513;
+      text-decoration: none;
+    }
+    article.post .tags a:hover {
+      text-decoration: underline;
+    }
+
+    /* The post body: its markup is unchanged, only these rules restyle it. */
+    article.post hr {
+      margin: 28px 0;
+    }
+    article.post h2 {
+      font: bold 24px/1.25 Georgia, serif;
+      margin: 1.5em 0 .5em;
+    }
+    article.post h3 {
+      font: bold 19px/1.3 Georgia, serif;
+      margin: 1.3em 0 .4em;
+    }
+    article.post .lede {
+      font-weight: bold;
+    }
+    article.post code {
+      font: 14px/1.4 monospace;
+      background: #fffaf0;
+      padding: 0 3px;
+      border: 1px dotted #d2b48c;
+    }
+    article.post pre {
+      background: #000;
+      color: #0f0;
+      padding: 12px 14px;
+      overflow-x: auto;
+      font: 13px/1.5 monospace;
+      margin: 1em 0;
+      border: 1px solid;
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+    }
+    article.post pre code {
+      font: inherit;
+      background: none;
+      padding: 0;
+      border: 0;
+    }
+    article.post table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+    article.post th,
+    article.post td {
+      border-bottom: 1px solid #d2b48c;
+      padding: 6px;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: break-word;
+    }
+
+    /* Figures: a caption above its table, listing or image. */
+    article.post figure {
+      margin: 1em 0;
+    }
+    article.post figure pre {
+      margin: 0;
+    }
+    article.post figcaption {
+      margin: 0 0 .5em;
+    }
+    article.post figure img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* An image in running text never widens the column either. */
+    article.post img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Footer inside the article: rule, mailbox GIF, the way home. */
+    article.post footer {
+      text-align: center;
+      font-style: italic;
+      margin-top: 34px;
+    }
+    article.post footer hr {
+      width: 50%;
+      margin: 0 auto 18px;
+    }
+
+    /* Narrow screens: long code wraps, and a wide table scrolls in its own box. */
+    @media (max-width: 600px) {
+      article.post td code {
+        overflow-wrap: anywhere;
+      }
+      article.post table {
+        display: block;
+        overflow-x: auto;
+      }
+      article.post code {
+        overflow-wrap: break-word;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="sign" href="./index.html">
+      <span class="sign-inner">
+        <span class="sign-title">COM0 on the Web</span>
+        <span class="sign-tagline">l5yth, freelance engineer</span>
+      </span>
+    </a>
+    <nav class="buttons">
+      <a href="./index.html#about">About me</a>
+      <a href="./index.html#blog">Blog</a>
+      <a href="./index.html#contact">Contact</a>
+    </nav>
+  </header>
+
+  <article class="post">
+    <div class="label">Blog / 2026-06-01</div>
+    <h1>ArduLinux: running Arduino firmware on Linux</h1>
+    <div class="tags">
+      <a href="./index.html#tag-arduino">#arduino</a>
+      <a href="./index.html#tag-linux">#linux</a>
+      <a href="./index.html#tag-cpp">#cpp</a>
+    </div>
+    <p><i>Originally published on <a href="https://dev.to/l5y/ardulinux-running-arduino-firmware-on-linux-2ong">dev.to</a>.</i></p>
+    <p><em>I'm writing this from a mesh repeater that has no microcontroller in it. It's a Linux box running <a href="https://meshcore.co.uk/">MeshCore</a> firmware <em>natively</em>, the same C++ that would normally live on an nRF52 or ESP32, compiled and running as an ordinary Linux process, talking to a real SPI radio. The thing that makes that possible is a small library called <strong><a href="https://github.com/l5yth/ardulinux">ArduLinux</a></strong>, and this post is the story of why it exists.</em></p>
+
+    <h2>The idea: the Arduino API, as a Linux library</h2>
+    <p>Embedded firmware is written against the Arduino API, <code>digitalWrite()</code>, <code>SPI.transfer()</code>, <code>Serial.printf()</code>, <code>Wire.begin()</code>, and friends. ArduLinux implements that API as a Linux user-space library, so firmware written for microcontrollers builds and runs on a PC or a Raspberry Pi <strong>unmodified</strong>. It wires the Arduino calls to real hardware, GPIO via libgpiod, SPI via spidev, I2C via i2c-dev, Serial via POSIX file descriptors, or to fully simulated devices when you just want to run in CI.</p>
+    <p>Using it is one block of <code>platformio.ini</code>:</p>
+    <pre><code>[env:ardulinux]
+platform = git+https://github.com/l5yth/ardulinux.git
+framework = arduino
+board = ardulinux
+</code></pre>
+    <p>That's it. Your <code>setup()</code> and <code>loop()</code> run on Linux.</p>
+
+    <h2>Standing on portduino's shoulders</h2>
+    <p>None of this is a new idea. ArduLinux is a <strong>clean-room continuation of <a href="https://github.com/geeksville/framework-portduino">portduino</a></strong>, the project (from the Meshtastic world, Kevin Hester, Jonathan Bennett, and many others) that pioneered running Arduino firmware on Linux. Portduino did the genuinely hard part: proving the approach works and carrying it for years. I want to be clear up front, this is a continuation written in gratitude, not a complaint.</p>
+    <p>But when I went to use portduino as a <em>dependency</em> for a fresh project, I kept tripping over the same thing: it was held together with patches.</p>
+
+    <h2>The monkey-patch problem</h2>
+    <p>Here's the concrete example that started it. The upstream <a href="https://github.com/arduino/ArduinoCore-API">ArduinoCore-API</a> <code>Print</code> class gives you <code>print()</code> and <code>println()</code>, but <strong>no <code>printf()</code></strong>. Tons of firmware (MeshCore included) calls <code>Serial.printf(...)</code>. Upstream hasn't added it. So you have to shim it in somewhere.</p>
+    <p>The way that shim had grown was, roughly:</p>
+    <pre><code># Copy the ENTIRE upstream API tree, minus Print.h...
+shutil.copytree(upstream_api, "patched_api", ignore=ignore_patterns("Print.h"))
+# ...then drop in our own hand-edited Print.h that adds printf().
+write_patched_print_h("patched_api/Print.h")
+</code></pre>
+    <p>Look at what that actually does: to add one method, you make a <strong>full, divergent copy of the upstream library</strong> at build time. And it wasn't only <code>Print.h</code>, the dependencies themselves (ArduinoCore-API, the WiFi library) were vendored as copied-and-patched source trees rather than tracked upstream.</p>
+    <p>That pattern has three nasty consequences:</p>
+    <ol>
+      <li><strong>You can't follow upstream.</strong> The pinned ArduinoCore-API had fallen ~180 commits behind, and bumping it meant re-doing the patches by hand. So nobody bumped it.</li>
+      <li><strong>The copy silently goes stale.</strong> The cached copy keyed on a <em>path</em>, not a version, so after a bump it could happily keep serving the old copy, and you'd never know.</li>
+      <li><strong>Bugs hide in the machinery.</strong> When the build is this baroque, latent bugs go unnoticed. (More on the two I found below.)</li>
+    </ol>
+    <p>The general principle, and it applies to <em>every</em> monkey-patched library, not just this one: <strong>the moment you copy-and-edit a dependency, you've silently forked it</strong>, and given up the one thing a dependency is supposed to give you, which is the ability to pull upstream's fixes.</p>
+
+    <h2>Why not just fix it inside portduino?</h2>
+    <p>Fair question, and I tried to convince myself it was the right move. It wasn't, for two reasons.</p>
+    <p><strong>It's structural, not cosmetic.</strong> The vendoring and the copytree shim weren't a bad function you could rewrite over a weekend; they were baked into the architecture, the package layout, the builder, the dependency model. Undoing them properly means re-laying the foundation. That's not a patch, it's a different building.</p>
+    <p><strong>portduino is load-bearing for other people.</strong> It's a live dependency of Meshtastic. A sweeping "rip out the vendoring and rewrite the build" change against a tree that thousands of devices depend on is exactly the kind of disruptive churn you <em>shouldn't</em> push onto a working project to suit your own narrower goals.</p>
+    <p>So I did the open-source thing: <strong>fork, clean up, and present.</strong> A continuation lets you re-establish the invariant, <em>depend on upstream, unmodified</em>, from a clean slate, without destabilizing anyone who's happy with what they have. If it's useful to others, wonderful. If not, portduino is right where it was.</p>
+
+    <h2>What changed in ArduLinux</h2>
+    <p>The whole renovation is in service of one rule: <strong>clean upstream dependencies, and isolate the single unavoidable shim.</strong></p>
+    <ul>
+      <li><strong>Dependencies are real git submodules</strong>, tracked at their upstream commits, not copied, not patched. Bumping ArduinoCore-API from 1.1.0 to 1.5.2 became a one-line gitlink change instead of a manual re-patching session.</li>
+      <li><strong>The <code>printf</code> shim is now a symlink overlay.</strong> Instead of copying the whole API and stripping a file, every upstream header is symlinked as-is, and we shadow <em>exactly one</em> file, <code>Print.h</code>, re-synced verbatim from upstream with the <code>printf()</code> method added. No copy, nothing to drift.</li>
+    </ul>
+    <pre><code># Symlink every upstream header as-is, the real files, never copied...
+for name in upstream_headers:
+    os.symlink(upstream / name, overlay / name)
+# ...and shadow ONLY Print.h: the one minimal, honest shim.
+</code></pre>
+    <ul>
+      <li><strong>Dead code and clutter removed</strong>, out-of-line duplicates, unused board variants, IDE project files.</li>
+    </ul>
+    <p>And the payoff that justifies the whole exercise: with the build no longer hiding things, two real bugs surfaced and got fixed.</p>
+    <ul>
+      <li><a href="https://github.com/meshtastic/framework-portduino/issues/71">#71</a> An I2C handle defaulted to file descriptor <code>0</code>, <strong>stdin</strong>, so a read before <code>begin()</code> would silently block on the terminal forever. (It now defaults to <code>-1</code> and fails fast, like the serial port already did.)</li>
+      <li><a href="https://github.com/meshtastic/framework-portduino/issues/72">#72</a> The <code>printf</code> shim trusted <code>vsnprintf</code>'s return value, which is the length it <em>would</em> have written, a classic <strong>buffer over-read</strong> on long strings. (Now clamped; verified under AddressSanitizer.)</li>
+    </ul>
+    <p>Neither was introduced by the cleanup; both were lurking. Simpler machinery just made them visible.</p>
+
+    <h2>Room to add new things</h2>
+    <p>Tidying the dependency story is only half of why the fork was worth it. The other half: once you own the runtime outright, you can make it behave like a proper Linux program.</p>
+    <ul>
+      <li><strong>Binary customization.</strong> An app sets its own name, version, description, and bug-report address through a few optional weak symbols, no header required. It then introduces itself in its startup banner and <code>--version</code>, names its data directory after itself, and labels its libgpiod lines with it. <code>meshcored</code> shows up as <code>meshcored</code>, not a generic <code>program</code>.</li>
+      <li><strong>XDG-compliant data directories.</strong> The virtual filesystem lives where a well-behaved Linux app keeps state, <code>$XDG_DATA_HOME/&lt;app&gt;/default</code> (so <code>~/.local/share/meshcored/...</code>), instead of scattering dotfiles across <code>$HOME</code>.</li>
+      <li><strong>A real command line.</strong> <code>--fsdir</code> to relocate that state, <code>--erase</code> to wipe it on startup, plus the usual <code>--version</code>, <code>--help</code>, and <code>--usage</code>.</li>
+    </ul>
+    <p>And the list keeps growing, because now there's somewhere natural to put it. So I'd gently resist the idea that this was only about chasing upstream versions: tracking upstream cleanly is the discipline that made the rest possible, but the visible, day-to-day payoff is a binary that starts up, stores data, and takes its flags like every other tool on the box.</p>
+
+    <h2>The proof</h2>
+    <p>The real test wasn't the unit suite, it was whether a downstream project could actually consume this. So I pointed my MeshCore-Linux branch at the first release tag <code>v0.2.0</code> as a pinned dependency and rebuilt.</p>
+    <p>It worked <strong>out of the box.</strong> I'm running a Linux-native MeshCore repeater on it right now, no complaints. That's the moment the whole "clean dependencies" thesis stopped being a principle and became a working radio on my desk.</p>
+
+    <h2>Try it</h2>
+    <p>ArduLinux is on the <a href="https://registry.platformio.org/">PlatformIO registry</a> and <a href="https://github.com/l5yth/ardulinux">GitHub</a>, LGPL-2.1, built on the work of the Arduino project, the portduino authors, and everyone who came before this split. If you've got embedded C++ you'd like to run, test, or debug on a real Linux machine, with <code>gdb</code>, with sanitizers, in CI, on actual GPIO, give it a spin:</p>
+    <pre><code>git clone --recurse-submodules https://github.com/l5yth/ardulinux.git
+cmake -B build &amp;&amp; cmake --build build
+./build/ArduLinux --help
+</code></pre>
+    <p>That's the spirit of open source: you fork, you clean up, you present, and you see if anyone else finds it useful. Maybe you will.</p>
+    <footer>
+      <hr>
+      <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes">
+      <div><a href="./index.html">Back to COM0 on the Web</a></div>
+    </footer>
+  </article>
+</body>
+</html>
