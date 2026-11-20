@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: 2026 l5yth
+SPDX-License-Identifier: Unlicense
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026-11 Shelly Camera without cloud</title>
+  <meta name="description" content="This article describes how a Shelly Camera is operated without the Shelly cloud. A cloud-free Shelly camera app does not exist. However, the camera runs locally through its Web UI, the Real Time Streaming Protocol (RTSP), WebRTC, a Network File System (NFS) share, and MQTT.">
+  <meta name="author" content="l5yth">
+  <meta name="keywords" content="shelly, home-assistant, self-hosting">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Shelly Camera without cloud">
+  <meta property="og:description" content="This article describes how a Shelly Camera is operated without the Shelly cloud. A cloud-free Shelly camera app does not exist. However, the camera runs locally through its Web UI, the Real Time Streaming Protocol (RTSP), WebRTC, a Network File System (NFS) share, and MQTT.">
+  <meta property="article:published_time" content="2026-11-13">
+  <meta property="article:tag" content="shelly">
+  <meta property="article:tag" content="home-assistant">
+  <meta property="article:tag" content="self-hosting">
+  <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "BlogPosting", "headline": "Shelly Camera without cloud", "description": "This article describes how a Shelly Camera is operated without the Shelly cloud. A cloud-free Shelly camera app does not exist. However, the camera runs locally through its Web UI, the Real Time Streaming Protocol (RTSP), WebRTC, a Network File System (NFS) share, and MQTT.", "datePublished": "2026-11-13", "keywords": "shelly, home-assistant, self-hosting", "author": { "@type": "Person", "name": "l5yth" } }</script>
+  <style>
+    body {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 16px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      background: #c2c09f url(./tile.png);
+      color: #111;
+      font: 18px/1.5 "Times New Roman", serif;
+    }
+    a:link {
+      color: #0000ee;
+    }
+    a:visited {
+      color: #551a8b;
+    }
+    a:hover {
+      color: #ff0000;
+    }
+
+    /* Masthead: the small sign links home, the buttons jump into it. */
+    header a.sign {
+      display: block;
+      text-decoration: none;
+      color: #efff02;
+      border: 6px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #efff02 0 6px, #000 6px 12px) border-box;
+      padding: 4px;
+    }
+    .sign-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 4px 16px;
+      border: 1px solid #efff02;
+      padding: 10px 14px;
+    }
+    .sign-title {
+      font: bold 22px/1.1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .sign-tagline {
+      font: bold 11px/1.4 Verdana, Geneva, sans-serif;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    nav.buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    nav.buttons a {
+      background: #d3d3d3;
+      color: #111;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      text-decoration: none;
+      padding: 8px 18px;
+      border: 1px solid;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    nav.buttons a:active {
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+      box-shadow: inset 1px 1px 0 #797a7a;
+    }
+
+    /* The article box, its hazard-striped label, title and tags. */
+    article.post {
+      position: relative;
+      background: #fdf5e6;
+      border: 3px double #8b4513;
+      padding: 36px 28px 24px;
+    }
+    .label {
+      position: absolute;
+      top: -15px;
+      left: 18px;
+      border: 3px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #f0e010 0 3px, #000 3px 6px) border-box;
+      color: #40a0f0;
+      text-shadow: 0 0 5px #40a0f0;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+    }
+    article.post h1 {
+      margin: 0 0 8px;
+      font: bold 34px/1.15 Georgia, serif;
+      text-wrap: balance;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 12px;
+      margin: 0 0 22px;
+    }
+    article.post .tags a {
+      font: 13px monospace;
+      color: #8b4513;
+      text-decoration: none;
+    }
+    article.post .tags a:hover {
+      text-decoration: underline;
+    }
+
+    /* The post body: its markup is unchanged, only these rules restyle it. */
+    article.post hr {
+      margin: 28px 0;
+    }
+    article.post h2 {
+      font: bold 24px/1.25 Georgia, serif;
+      margin: 1.5em 0 .5em;
+    }
+    article.post h3 {
+      font: bold 19px/1.3 Georgia, serif;
+      margin: 1.3em 0 .4em;
+    }
+    article.post .lede {
+      font-weight: bold;
+    }
+    article.post code {
+      font: 14px/1.4 monospace;
+      background: #fffaf0;
+      padding: 0 3px;
+      border: 1px dotted #d2b48c;
+    }
+    article.post pre {
+      background: #000;
+      color: #0f0;
+      padding: 12px 14px;
+      overflow-x: auto;
+      font: 13px/1.5 monospace;
+      margin: 1em 0;
+      border: 1px solid;
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+    }
+    article.post pre code {
+      font: inherit;
+      background: none;
+      padding: 0;
+      border: 0;
+    }
+    article.post table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+    article.post th,
+    article.post td {
+      border-bottom: 1px solid #d2b48c;
+      padding: 6px;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: break-word;
+    }
+
+    /* Figures: a caption above its table, listing or image. */
+    article.post figure {
+      margin: 1em 0;
+    }
+    article.post figure pre {
+      margin: 0;
+    }
+    article.post figcaption {
+      margin: 0 0 .5em;
+    }
+    article.post figure img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Footer inside the article: rule, mailbox GIF, the way home. */
+    article.post footer {
+      text-align: center;
+      font-style: italic;
+      margin-top: 34px;
+    }
+    article.post footer hr {
+      width: 50%;
+      margin: 0 auto 18px;
+    }
+
+    /* Narrow screens: long code wraps, and a wide table scrolls in its own box. */
+    @media (max-width: 600px) {
+      article.post td code {
+        overflow-wrap: anywhere;
+      }
+      article.post table {
+        display: block;
+        overflow-x: auto;
+      }
+      article.post code {
+        overflow-wrap: break-word;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="sign" href="./index.html">
+      <span class="sign-inner">
+        <span class="sign-title">COM0 on the Web</span>
+        <span class="sign-tagline">l5yth, freelance engineer</span>
+      </span>
+    </a>
+    <nav class="buttons">
+      <a href="./index.html#about">About me</a>
+      <a href="./index.html#blog">Blog</a>
+      <a href="./index.html#contact">Contact</a>
+    </nav>
+  </header>
+
+  <article class="post">
+    <div class="label">Blog / 2026-11-13</div>
+    <h1>Shelly Camera without cloud</h1>
+    <div class="tags">
+      <a href="./index.html#tag-shelly">#shelly</a>
+      <a href="./index.html#tag-home-assistant">#home-assistant</a>
+      <a href="./index.html#tag-self-hosting">#self-hosting</a>
+    </div>
+    <p>This article describes how a Shelly Camera is operated without the Shelly cloud. A cloud-free Shelly camera app does not exist. However, the camera runs locally through its Web UI, the Real Time Streaming Protocol (RTSP), WebRTC, a Network File System (NFS) share, and MQTT.</p>
+    <h2>Apps</h2>
+    <figure>
+      <figcaption><strong>Table 1:</strong> None of the available apps provides video without the cloud. The device Web UI does.</figcaption>
+      <table>
+        <thead>
+          <tr><th>App</th><th>Finding</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Shelly Smart Control</td><td>An account is required. A device must reach the cloud once to be added and can be cut off afterwards (<a href="https://shelly-forum.com/thread/14656-shelly-app-for-android-how-to-use-local-control-mode-no-cloud">Shelly Forum</a>). Local live view of the camera is undocumented. microSD recordings open in the device Web UI, not in the app.</td></tr>
+          <tr><td>Third-party local apps (Pearlnode, Hestia, ShellMan, ShellyPilot)</td><td>Switch and relay control only, no video.</td></tr>
+          <tr><td>Device Web UI</td><td>Live view, recordings, and settings. It requires the same network, but neither internet nor cloud. The interface is minimal.</td></tr>
+        </tbody>
+      </table>
+    </figure>
+    <h2>Local interfaces</h2>
+    <figure>
+      <figcaption><strong>Table 2:</strong> Everything needed for local operation is on the device. The cloud is optional and can be switched off.</figcaption>
+      <table>
+        <thead>
+          <tr><th>Interface</th><th>Default</th><th>Detail</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Web UI</td><td>on</td><td>Same network, no internet, no cloud. Live view, recordings, all settings.</td></tr>
+          <tr><td>RTSP</td><td>off</td><td>Two H.264 streams (main and substream), unencrypted. The password is set in the Authentication tab.</td></tr>
+          <tr><td>WebRTC (WHEP)</td><td>on</td><td>Peer-to-peer live view, Streamer API</td></tr>
+          <tr><td>microSD</td><td>optional</td><td>Up to 512 GB, FAT32. Motion-triggered and manual clips.</td></tr>
+          <tr><td>NFS share</td><td>optional</td><td>Recordings to a Network Attached Storage (NAS) instead of or beside the card</td></tr>
+          <tr><td>MQTT, WebSocket, webhooks, scripting</td><td>available</td><td>20 webhooks with 5 URLs each. Motion events without the cloud.</td></tr>
+          <tr><td>Cloud</td><td>on</td><td>Can be disabled completely in the Web UI (<a href="https://techtest.org/shelly-camera-im-test-guenstige-ueberwachungskamera-aus-europa-ohne-cloud-zwang-mit-rtsp-mqtt/">techtest.org</a>)</td></tr>
+          <tr><td>ONVIF</td><td>absent</td><td>Announced before launch (<a href="https://www.notebookcheck.net/New-Shelly-smart-security-camera-on-the-way.1229284.0.html">Notebookcheck</a>), not in the shipped documentation</td></tr>
+        </tbody>
+      </table>
+    </figure>
+    <p>The following functions remain cloud-only: (1) object recognition for people, pets, and vehicles, (2) cloud storage, and (3) offline notifications. Shelly Cloud Premium costs 3.99 &#8364; per month for one camera. Camera Storage costs 6.99 &#8364; per month for up to 3 cameras, 10.99 &#8364; for up to 6, and 14.99 &#8364; for up to 10 (<a href="https://www.shelly.com/products/shelly-camera">product page</a>).</p>
+    <h2>Options</h2>
+    <figure>
+      <figcaption><strong>Table 3:</strong> Four routes operate without an account. The first three are fed by RTSP.</figcaption>
+      <table>
+        <thead>
+          <tr><th>Route</th><th>Software</th><th>Result</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Browser viewer</td><td>go2rtc, standalone binary</td><td>WebRTC/MSE playback in any browser with sub-second latency. Home Assistant uses the same component internally. Here it runs without Home Assistant.</td></tr>
+          <tr><td>Network Video Recorder (NVR)</td><td>Frigate (listed by Shelly as compatible), Scrypted, Synology Surveillance Station, ZoneMinder</td><td>Continuous or motion recording on own hardware, with local object detection if wanted. The microSD card becomes unnecessary.</td></tr>
+          <tr><td>Phone</td><td>tinyCam Monitor (Android), VLC, IP Cam Viewer</td><td>Live view over RTSP on the LAN or through a Virtual Private Network (VPN)</td></tr>
+          <tr><td>Storage</td><td>microSD, or NFS export on a NAS</td><td>Recordings stay in the house. They are viewed in the Web UI or on the NAS.</td></tr>
+        </tbody>
+      </table>
+    </figure>
+    <p>Motion events reach other systems over MQTT or webhooks. Therefore, automations require neither the cloud nor Home Assistant.</p>
+    <h2>Procedure</h2>
+    <p>After the following seven steps in the Web UI, the stream is available to local software.</p>
+    <ol>
+      <li>Open the Web UI at the IP address of the camera. Assign the camera a fixed DHCP lease.</li>
+      <li>Set a password in the Authentication tab, as RTSP carries video and audio in clear text.</li>
+      <li>Enable RTSP. The main stream serves recording. The substream serves detection and previews.</li>
+      <li>Configure the storage: insert a FAT32 microSD card or configure the NFS share.</li>
+      <li>Disable the cloud connection. The cloud icon in the header turns gray.</li>
+      <li>Keep the RTSP port inside the LAN. Do not forward the port. Use a VPN for remote access.</li>
+      <li>Point go2rtc or the NVR at the RTSP URL shown in the Web UI.</li>
+    </ol>
+    <h2>Home Assistant</h2>
+    <ul>
+      <li>The Shelly integration delivers the motion state, not video. The camera is discovered, and its motion sensor appears.</li>
+      <li>The stream must be added manually as a generic camera with the RTSP URL (<a href="https://techtest.org/shelly-camera-im-test-guenstige-ueberwachungskamera-aus-europa-ohne-cloud-zwang-mit-rtsp-mqtt/">techtest.org</a>).</li>
+      <li>A camera entity without a picture indicates this gap, not a broken installation.</li>
+      <li>go2rtc standalone or an NVR removes Home Assistant from the video path entirely.</li>
+    </ul>
+    <h2>References</h2>
+    <ul>
+      <li><a href="https://shelly-api-docs.shelly.cloud/gen2/Devices/Gen3/ShellyCamera/">Shelly Camera API documentation</a>: streams, RTSP, WHEP, SD card and NFS storage</li>
+      <li><a href="https://www.shelly.com/blogs/documentation/shelly-camera-smart-control">Shelly Camera Smart Control</a>: app functions, subscription gates, RTSP warnings</li>
+      <li><a href="https://www.shelly.com/it/blogs/documentazione/shelly-camera-web-interface">Shelly Camera Web Interface</a>: local Web UI without cloud, stream 0 and 1</li>
+      <li><a href="https://www.shelly.com/products/shelly-camera">Shelly Camera product page</a>: RTSP, WebRTC, MQTT, Frigate and Home Assistant compatibility, subscription prices</li>
+      <li><a href="https://www.shelly.com/blogs/documentation/do-i-need-internet-cloud-access-to-use-shelly-smart-control-application-1">Do I need internet/cloud access to use Shelly Smart Control</a>: local control mode</li>
+      <li><a href="https://shelly-forum.com/thread/14656-shelly-app-for-android-how-to-use-local-control-mode-no-cloud">Shelly Forum: local control mode without cloud</a>: support answer on one-time cloud access, ShellyPilot</li>
+      <li><a href="https://techtest.org/shelly-camera-im-test-guenstige-ueberwachungskamera-aus-europa-ohne-cloud-zwang-mit-rtsp-mqtt/">techtest.org review</a>: cloud fully disableable, Home Assistant stream via RTSP only</li>
+      <li><a href="https://www.notebookcheck.net/New-Shelly-smart-security-camera-on-the-way.1229284.0.html">Notebookcheck: pre-launch announcement</a>: RTSP/ONVIF announced</li>
+    </ul>
+    <footer>
+      <hr>
+      <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes">
+      <div><a href="./index.html">Back to COM0 on the Web</a></div>
+    </footer>
+  </article>
+</body>
+</html>

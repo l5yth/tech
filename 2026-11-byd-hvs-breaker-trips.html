@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: 2026 l5yth
+SPDX-License-Identifier: Unlicense
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026-11 BYD HVS+ on Fronius GEN24: breaker trips traced to BMS firmware 1.28</title>
+  <meta name="description" content="This article documents how recurring breaker trips of a BYD Battery-Box HVS+ on a Fronius GEN24 inverter were traced to the Battery Management System (BMS) firmware V1.28.0. In addition, it describes the firmware update over Bluetooth. The fix is not yet confirmed.">
+  <meta name="author" content="l5yth">
+  <meta name="keywords" content="fronius, solar, byd">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="BYD HVS+ on Fronius GEN24: breaker trips traced to BMS firmware 1.28">
+  <meta property="og:description" content="This article documents how recurring breaker trips of a BYD Battery-Box HVS+ on a Fronius GEN24 inverter were traced to the Battery Management System (BMS) firmware V1.28.0. In addition, it describes the firmware update over Bluetooth. The fix is not yet confirmed.">
+  <meta property="article:published_time" content="2026-11-14">
+  <meta property="article:tag" content="fronius">
+  <meta property="article:tag" content="solar">
+  <meta property="article:tag" content="byd">
+  <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "BlogPosting", "headline": "BYD HVS+ on Fronius GEN24: breaker trips traced to BMS firmware 1.28", "description": "This article documents how recurring breaker trips of a BYD Battery-Box HVS+ on a Fronius GEN24 inverter were traced to the Battery Management System (BMS) firmware V1.28.0. In addition, it describes the firmware update over Bluetooth. The fix is not yet confirmed.", "datePublished": "2026-11-14", "keywords": "fronius, solar, byd", "author": { "@type": "Person", "name": "l5yth" } }</script>
+  <style>
+    body {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 16px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      background: #c2c09f url(./tile.png);
+      color: #111;
+      font: 18px/1.5 "Times New Roman", serif;
+    }
+    a:link {
+      color: #0000ee;
+    }
+    a:visited {
+      color: #551a8b;
+    }
+    a:hover {
+      color: #ff0000;
+    }
+
+    /* Masthead: the small sign links home, the buttons jump into it. */
+    header a.sign {
+      display: block;
+      text-decoration: none;
+      color: #efff02;
+      border: 6px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #efff02 0 6px, #000 6px 12px) border-box;
+      padding: 4px;
+    }
+    .sign-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 4px 16px;
+      border: 1px solid #efff02;
+      padding: 10px 14px;
+    }
+    .sign-title {
+      font: bold 22px/1.1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .sign-tagline {
+      font: bold 11px/1.4 Verdana, Geneva, sans-serif;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    nav.buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    nav.buttons a {
+      background: #d3d3d3;
+      color: #111;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      text-decoration: none;
+      padding: 8px 18px;
+      border: 1px solid;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    nav.buttons a:active {
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+      box-shadow: inset 1px 1px 0 #797a7a;
+    }
+
+    /* The article box, its hazard-striped label, title and tags. */
+    article.post {
+      position: relative;
+      background: #fdf5e6;
+      border: 3px double #8b4513;
+      padding: 36px 28px 24px;
+    }
+    .label {
+      position: absolute;
+      top: -15px;
+      left: 18px;
+      border: 3px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #f0e010 0 3px, #000 3px 6px) border-box;
+      color: #40a0f0;
+      text-shadow: 0 0 5px #40a0f0;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+    }
+    article.post h1 {
+      margin: 0 0 8px;
+      font: bold 34px/1.15 Georgia, serif;
+      text-wrap: balance;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 12px;
+      margin: 0 0 22px;
+    }
+    article.post .tags a {
+      font: 13px monospace;
+      color: #8b4513;
+      text-decoration: none;
+    }
+    article.post .tags a:hover {
+      text-decoration: underline;
+    }
+
+    /* The post body: its markup is unchanged, only these rules restyle it. */
+    article.post hr {
+      margin: 28px 0;
+    }
+    article.post h2 {
+      font: bold 24px/1.25 Georgia, serif;
+      margin: 1.5em 0 .5em;
+    }
+    article.post h3 {
+      font: bold 19px/1.3 Georgia, serif;
+      margin: 1.3em 0 .4em;
+    }
+    article.post .lede {
+      font-weight: bold;
+    }
+    article.post code {
+      font: 14px/1.4 monospace;
+      background: #fffaf0;
+      padding: 0 3px;
+      border: 1px dotted #d2b48c;
+    }
+    article.post pre {
+      background: #000;
+      color: #0f0;
+      padding: 12px 14px;
+      overflow-x: auto;
+      font: 13px/1.5 monospace;
+      margin: 1em 0;
+      border: 1px solid;
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+    }
+    article.post pre code {
+      font: inherit;
+      background: none;
+      padding: 0;
+      border: 0;
+    }
+    article.post table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+    article.post th,
+    article.post td {
+      border-bottom: 1px solid #d2b48c;
+      padding: 6px;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: break-word;
+    }
+
+    /* Figures: a caption above its table, listing or image. */
+    article.post figure {
+      margin: 1em 0;
+    }
+    article.post figure pre {
+      margin: 0;
+    }
+    article.post figcaption {
+      margin: 0 0 .5em;
+    }
+    article.post figure img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Footer inside the article: rule, mailbox GIF, the way home. */
+    article.post footer {
+      text-align: center;
+      font-style: italic;
+      margin-top: 34px;
+    }
+    article.post footer hr {
+      width: 50%;
+      margin: 0 auto 18px;
+    }
+
+    /* Narrow screens: long code wraps, and a wide table scrolls in its own box. */
+    @media (max-width: 600px) {
+      article.post td code {
+        overflow-wrap: anywhere;
+      }
+      article.post table {
+        display: block;
+        overflow-x: auto;
+      }
+      article.post code {
+        overflow-wrap: break-word;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="sign" href="./index.html">
+      <span class="sign-inner">
+        <span class="sign-title">COM0 on the Web</span>
+        <span class="sign-tagline">l5yth, freelance engineer</span>
+      </span>
+    </a>
+    <nav class="buttons">
+      <a href="./index.html#about">About me</a>
+      <a href="./index.html#blog">Blog</a>
+      <a href="./index.html#contact">Contact</a>
+    </nav>
+  </header>
+
+  <article class="post">
+    <div class="label">Blog / 2026-11-14</div>
+    <h1>BYD HVS+ on Fronius GEN24: breaker trips traced to BMS firmware 1.28</h1>
+    <div class="tags">
+      <a href="./index.html#tag-fronius">#fronius</a>
+      <a href="./index.html#tag-solar">#solar</a>
+      <a href="./index.html#tag-byd">#byd</a>
+    </div>
+    <p>This article documents how recurring breaker trips of a BYD Battery-Box HVS+ on a Fronius GEN24 inverter were traced to the Battery Management System (BMS) firmware V1.28.0. In addition, it describes the firmware update over Bluetooth. The fix is not yet confirmed.</p>
+    <h2>Symptom</h2>
+    <p>The test system consists of a Fronius Symo GEN24 6.0 SC Plus inverter and a BYD Battery-Box HVS+ with 5 modules.</p>
+    <ul>
+      <li>The breaker on the Battery Control Unit (BCU) has dropped approximately once a week since late October. Each trip required a manual reset.</li>
+      <li>The trips occur at low power, without load peaks. The Residual Current Device (RCD) is not involved.</li>
+    </ul>
+    <h2>Findings</h2>
+    <figure>
+      <figcaption><strong>Table 1:</strong> The GEN24 event log of 2026 lists code 1240, "No battery detected", seven times.</figcaption>
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Start</th><th>Duration</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>November 13</td><td>16:16</td><td>17 h 23 min</td></tr>
+          <tr><td>November 10</td><td>20:22</td><td>5 min</td></tr>
+          <tr><td>November 8</td><td>03:19</td><td>8 h 6 min</td></tr>
+          <tr><td>November 5</td><td>02:59</td><td>46 s</td></tr>
+          <tr><td>November 1</td><td>13:03</td><td>55 min</td></tr>
+          <tr><td>October 30</td><td>04:00</td><td>7 min</td></tr>
+          <tr><td>September 10</td><td>06:36</td><td>approximately 2 h</td></tr>
+        </tbody>
+      </table>
+    </figure>
+    <ul>
+      <li><strong>(F1)</strong> Three events cleared by themselves within 7 minutes. The other four lasted until a manual reset.</li>
+      <li><strong>(F2)</strong> Five of the seven events began during standby (code 1175, "Too low DC power for feed-in").</li>
+      <li><strong>(F3)</strong> On September 10, 30 minutes before the first dropout, the log shows BYD3-48 "Pre-charge Fault - Fault2". It is the only BYD code in the log.</li>
+      <li><strong>(F4)</strong> The dropouts occur with the minimum State of Charge (SOC) at 7% and at 50%. Therefore, the SOC level is not the trigger.</li>
+      <li><strong>(F5)</strong> The BYD Energy app shows no alarms, a State of Health (SOH) of 100%, 89 cycles, and a cell spread of 16 mV (3316 to 3332 mV).</li>
+      <li><strong>(F6)</strong> The BMS firmware as found was V1.28.0.</li>
+    </ul>
+    <h2>Cause</h2>
+    <ul>
+      <li><strong>(C1)</strong> The BMS still ran the delivery firmware V1.28.0 (F6).</li>
+      <li><strong>(C2)</strong> BYD requires BMS 1.29 or newer for Fronius inverters, in addition to GEN24 firmware 1.39.5-1 or newer and the "Compatible Battery" setting (<a href="https://www.memodo.de/mwdownloads/b960c0ab7e715d8aba12eda822c2fa2a">notice of November 20, 2025</a>).</li>
+      <li><strong>(C3)</strong> A known defect causes sporadic pre-charge failures (EC108) on HVB, HVS+, and HVM+, mostly with Fronius inverters (compare F3). According to EFT, BMS V1.33 targets it (<a href="https://www.photovoltaikforum.com/thread/254263-byd-hvs-probleme-inbetriebnahme/?pageNo=4">forum</a>).</li>
+      <li><strong>(C4)</strong> The dropouts cluster in energy saving mode, i.e., at minimum SOC and without photovoltaic (PV) power (compare F2). The system has entered this mode almost nightly since mid-October (<a href="https://media.hornbach.at/hb/ownersmanual/as.182203903.pdf">Fronius manual</a>).</li>
+    </ul>
+    <h2>Firmware update</h2>
+    <p>The firmware was updated over Bluetooth on November 14, 2026. The update of all three components took approximately one hour.</p>
+    <figure>
+      <figcaption><strong>Table 2:</strong> The update replaced the firmware of all three components.</figcaption>
+      <table>
+        <thead>
+          <tr><th>Component</th><th>Before</th><th>After</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>BMS</td><td>V1.28.0</td><td>V1.37.0</td></tr>
+          <tr><td>Module MCU1</td><td>V1.0.26</td><td>V1.3.64</td></tr>
+          <tr><td>Module MCU2</td><td>V1.1.36</td><td>V1.4.58</td></tr>
+        </tbody>
+      </table>
+    </figure>
+    <p>The update comprises the following steps.</p>
+    <ol>
+      <li>Open the BYD Energy app in local mode, without an account, and connect to the battery. Pitfalls (P2) to (P4) apply.</li>
+      <li>Select Setting &gt; Firmware Upgrade &gt; Firmware Upgrade (Bluetooth) (<a href="https://cms.eft-systems.de/files/BYD%20Energy%EF%BC%88Battery%EF%BC%89Quick%20Operation%20Guide.pdf">guide</a>).</li>
+      <li>Reconnect after each upgrade, as Bluetooth disconnects.</li>
+      <li>Afterward, restart in this order: inverter off, battery off, battery on, inverter on.</li>
+    </ol>
+    <h2>Pitfalls</h2>
+    <ul>
+      <li><strong>(P1)</strong> The lit button on the BCU is the power button. Held for 5 seconds, it shuts the battery down and the breaker drops. This is by design and not a fault.</li>
+      <li><strong>(P2)</strong> The pairing button sits on the Smart WiFi/LAN module. It must be held for approximately 7 seconds until the blue LED blinks fast. Holding it for more than 10 seconds triggers a factory reset.</li>
+      <li><strong>(P3)</strong> The battery must be added by the BCU serial, which equals the Bluetooth name of the module. With any other serial, the app never connects.</li>
+      <li><strong>(P4)</strong> The module rejects pairing in the Android Bluetooth settings. The connection must be made inside the app, with Bluetooth and location switched on.</li>
+      <li><strong>(P5)</strong> The Solar.web codes 995, 996, and 999 are portal data gaps, not battery faults (<a href="https://www.fronius.com/es-es/spain/energia-solar/propietarios-de-casas/contacto/apoyo-a-los-propietarios-de-sistemas-fotovoltaicos/support-for-solarweb">Fronius Solar.web support</a>).</li>
+    </ul>
+    <h2>Status</h2>
+    <ul>
+      <li>The fix is unconfirmed. The criterion is two weeks without code 1240.</li>
+      <li>Two checks remain open (C2): the GEN24 firmware at 1.39.5-1 or newer, and the battery configured as "Compatible Battery".</li>
+      <li>If the fault recurs, the next steps are (1) a check of the DC cabling between battery and inverter and (2) a BCU replacement under warranty.</li>
+    </ul>
+    <h2>References</h2>
+    <ul>
+      <li><a href="https://www.memodo.de/mwdownloads/b960c0ab7e715d8aba12eda822c2fa2a">BYD notice on Fronius compatibility, November 20, 2025</a></li>
+      <li><a href="https://solarplaza.at/wp-content/uploads/2026/06/Service-Leitfaden-und-Checkliste.pdf">BYD HVB, HVM+, HVS+ service guideline and checklist</a> (German)</li>
+      <li><a href="https://cms.eft-systems.de/files/BYD%20Energy%EF%BC%88Battery%EF%BC%89Quick%20Operation%20Guide.pdf">BYD Energy App quick operation guide</a></li>
+      <li><a href="https://media.hornbach.at/hb/ownersmanual/as.182203903.pdf">Fronius Symo GEN24 operating instructions</a>, chapter Energiesparmodus</li>
+      <li><a href="https://www.photovoltaikforum.com/thread/254263-byd-hvs-probleme-inbetriebnahme/?pageNo=4">Photovoltaikforum: BYD HVS+, Probleme Inbetriebnahme, page 4</a> (EFT statement on V1.33)</li>
+      <li><a href="https://www.fronius.com/es-es/spain/energia-solar/propietarios-de-casas/contacto/apoyo-a-los-propietarios-de-sistemas-fotovoltaicos/support-for-solarweb">Fronius Solar.web support</a> (codes 995, 996, 999)</li>
+    </ul>
+    <footer>
+      <hr>
+      <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes">
+      <div><a href="./index.html">Back to COM0 on the Web</a></div>
+    </footer>
+  </article>
+</body>
+</html>

@@ -201,11 +201,22 @@ SPDX-License-Identifier: Unlicense
       box-shadow: inset -1px -1px 0 #797a7a;
     }
     #blog .filters .f-all,
-    #tag-meshtastic:target ~ .filters .f-meshtastic,
+    #tag-home-assistant:target ~ .filters .f-home-assistant,
+    #tag-fronius:target ~ .filters .f-fronius,
     #tag-linux:target ~ .filters .f-linux,
+    #tag-meshtastic:target ~ .filters .f-meshtastic,
+    #tag-solar:target ~ .filters .f-solar,
+    #tag-arch-linux:target ~ .filters .f-arch-linux,
+    #tag-byd:target ~ .filters .f-byd,
+    #tag-diy:target ~ .filters .f-diy,
+    #tag-energy:target ~ .filters .f-energy,
+    #tag-lego:target ~ .filters .f-lego,
     #tag-python:target ~ .filters .f-python,
     #tag-raspberry-pi:target ~ .filters .f-raspberry-pi,
-    #tag-ruby:target ~ .filters .f-ruby {
+    #tag-ruby:target ~ .filters .f-ruby,
+    #tag-rust:target ~ .filters .f-rust,
+    #tag-self-hosting:target ~ .filters .f-self-hosting,
+    #tag-shelly:target ~ .filters .f-shelly {
       background: #efff02;
       color: #000;
       border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
@@ -217,11 +228,22 @@ SPDX-License-Identifier: Unlicense
       border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
       box-shadow: inset -1px -1px 0 #797a7a;
     }
-    #tag-meshtastic:target ~ .entry:not(.t-meshtastic),
+    #tag-home-assistant:target ~ .entry:not(.t-home-assistant),
+    #tag-fronius:target ~ .entry:not(.t-fronius),
     #tag-linux:target ~ .entry:not(.t-linux),
+    #tag-meshtastic:target ~ .entry:not(.t-meshtastic),
+    #tag-solar:target ~ .entry:not(.t-solar),
+    #tag-arch-linux:target ~ .entry:not(.t-arch-linux),
+    #tag-byd:target ~ .entry:not(.t-byd),
+    #tag-diy:target ~ .entry:not(.t-diy),
+    #tag-energy:target ~ .entry:not(.t-energy),
+    #tag-lego:target ~ .entry:not(.t-lego),
     #tag-python:target ~ .entry:not(.t-python),
     #tag-raspberry-pi:target ~ .entry:not(.t-raspberry-pi),
-    #tag-ruby:target ~ .entry:not(.t-ruby) {
+    #tag-ruby:target ~ .entry:not(.t-ruby),
+    #tag-rust:target ~ .entry:not(.t-rust),
+    #tag-self-hosting:target ~ .entry:not(.t-self-hosting),
+    #tag-shelly:target ~ .entry:not(.t-shelly) {
       display: none;
     }
     .entry {
@@ -331,8 +353,8 @@ SPDX-License-Identifier: Unlicense
         <h1>COM0 on the Web</h1>
         <p class="tagline">l5yth, freelance engineer</p>
         <div class="ticker">
-          <marquee scrollamount="4">Welcome to my homepage! +++ New on the blog: Running Meshtastic Daemon on Raspberry Pi 4B +++</marquee>
-          <div class="ticker-still">Welcome to my homepage! +++ New on the blog: Running Meshtastic Daemon on Raspberry Pi 4B +++</div>
+          <marquee scrollamount="4">Welcome to my homepage! +++ New on the blog: Seasonal battery reserve on a Fronius GEN24 with Home Assistant +++</marquee>
+          <div class="ticker-still">Welcome to my homepage! +++ New on the blog: Seasonal battery reserve on a Fronius GEN24 with Home Assistant +++</div>
         </div>
       </div>
     </div>
@@ -376,24 +398,116 @@ SPDX-License-Identifier: Unlicense
 
   <section id="blog" class="box">
     <h2 class="label">Latest blog posts</h2>
-    <span id="tag-meshtastic" class="tag-anchor"></span>
+    <span id="tag-home-assistant" class="tag-anchor"></span>
+    <span id="tag-fronius" class="tag-anchor"></span>
     <span id="tag-linux" class="tag-anchor"></span>
+    <span id="tag-meshtastic" class="tag-anchor"></span>
+    <span id="tag-solar" class="tag-anchor"></span>
+    <span id="tag-arch-linux" class="tag-anchor"></span>
+    <span id="tag-byd" class="tag-anchor"></span>
+    <span id="tag-diy" class="tag-anchor"></span>
+    <span id="tag-energy" class="tag-anchor"></span>
+    <span id="tag-lego" class="tag-anchor"></span>
     <span id="tag-python" class="tag-anchor"></span>
     <span id="tag-raspberry-pi" class="tag-anchor"></span>
     <span id="tag-ruby" class="tag-anchor"></span>
+    <span id="tag-rust" class="tag-anchor"></span>
+    <span id="tag-self-hosting" class="tag-anchor"></span>
+    <span id="tag-shelly" class="tag-anchor"></span>
     <div class="filters">
       <span class="filters-label">Filter by tag:</span>
       <a class="f-all" href="#blog">all</a>
-      <a class="f-meshtastic" href="#tag-meshtastic">#meshtastic</a>
+      <a class="f-home-assistant" href="#tag-home-assistant">#home-assistant</a>
+      <a class="f-fronius" href="#tag-fronius">#fronius</a>
       <a class="f-linux" href="#tag-linux">#linux</a>
+      <a class="f-meshtastic" href="#tag-meshtastic">#meshtastic</a>
+      <a class="f-solar" href="#tag-solar">#solar</a>
+      <a class="f-arch-linux" href="#tag-arch-linux">#arch-linux</a>
+      <a class="f-byd" href="#tag-byd">#byd</a>
+      <a class="f-diy" href="#tag-diy">#diy</a>
+      <a class="f-energy" href="#tag-energy">#energy</a>
+      <a class="f-lego" href="#tag-lego">#lego</a>
       <a class="f-python" href="#tag-python">#python</a>
       <a class="f-raspberry-pi" href="#tag-raspberry-pi">#raspberry-pi</a>
       <a class="f-ruby" href="#tag-ruby">#ruby</a>
+      <a class="f-rust" href="#tag-rust">#rust</a>
+      <a class="f-self-hosting" href="#tag-self-hosting">#self-hosting</a>
+      <a class="f-shelly" href="#tag-shelly">#shelly</a>
+    </div>
+    <div class="entry t-home-assistant t-fronius t-solar">
+      <time>2026-11-19</time>
+      <div>
+        <a class="entry-title" href="./2026-11-fronius-seasonal-reserve.html">Seasonal battery reserve on a Fronius GEN24 with Home Assistant</a> <span class="new">NEW!</span>
+        <div class="blurb">This article describes a Home Assistant automation that sets the minimum battery reserve of a Fronius GEN24 inverter by month. The method uses local Modbus TCP and the core Fronius integration. It requires neither a cloud service nor a custom integration.</div>
+        <div class="tags">
+          <a href="#tag-home-assistant">#home-assistant</a>
+          <a href="#tag-fronius">#fronius</a>
+          <a href="#tag-solar">#solar</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-lego t-diy">
+      <time>2026-11-17</time>
+      <div>
+        <a class="entry-title" href="./2026-11-lego-concorde-wall-frame.html">LEGO Concorde 10318 on a wall frame: mounting procedure</a>
+        <div class="blurb">This article describes how the LEGO Concorde 10318 is mounted on a Mark's Magic wall display frame. The frame ships without written instructions. The plane is mounted nose up with one L-bracket under the keel end and one cable tie in the nose gear well.</div>
+        <div class="tags">
+          <a href="#tag-lego">#lego</a>
+          <a href="#tag-diy">#diy</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-linux t-arch-linux t-rust">
+      <time>2026-11-16</time>
+      <div>
+        <a class="entry-title" href="./2026-11-craft-apps-update-check.html">Craft apps: disabling the update check</a>
+        <div class="blurb">This article describes how the startup update check of the 13 Craft desktop apps is disabled. On the test system, the apps are installed from the Arch repositories only, while upstream publishes several releases per day. Therefore, every launch opened an "update available" prompt. The apps provide no setting for the check. The switch is a JSON file owned by the launcher.</div>
+        <div class="tags">
+          <a href="#tag-linux">#linux</a>
+          <a href="#tag-arch-linux">#arch-linux</a>
+          <a href="#tag-rust">#rust</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-fronius t-solar t-byd">
+      <time>2026-11-14</time>
+      <div>
+        <a class="entry-title" href="./2026-11-byd-hvs-breaker-trips.html">BYD HVS+ on Fronius GEN24: breaker trips traced to BMS firmware 1.28</a>
+        <div class="blurb">This article documents how recurring breaker trips of a BYD Battery-Box HVS+ on a Fronius GEN24 inverter were traced to the Battery Management System (BMS) firmware V1.28.0. In addition, it describes the firmware update over Bluetooth. The fix is not yet confirmed.</div>
+        <div class="tags">
+          <a href="#tag-fronius">#fronius</a>
+          <a href="#tag-solar">#solar</a>
+          <a href="#tag-byd">#byd</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-shelly t-home-assistant t-self-hosting">
+      <time>2026-11-13</time>
+      <div>
+        <a class="entry-title" href="./2026-11-shelly-camera-without-cloud.html">Shelly Camera without cloud</a>
+        <div class="blurb">This article describes how a Shelly Camera is operated without the Shelly cloud. A cloud-free Shelly camera app does not exist. However, the camera runs locally through its Web UI, the Real Time Streaming Protocol (RTSP), WebRTC, a Network File System (NFS) share, and MQTT.</div>
+        <div class="tags">
+          <a href="#tag-shelly">#shelly</a>
+          <a href="#tag-home-assistant">#home-assistant</a>
+          <a href="#tag-self-hosting">#self-hosting</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-home-assistant t-energy">
+      <time>2026-11-05</time>
+      <div>
+        <a class="entry-title" href="./2026-11-home-assistant-untracked-consumption.html">Home Assistant: naming untracked consumption per upstream device</a>
+        <div class="blurb">This article describes how the untracked consumption of an upstream device receives its own name in the Home Assistant energy dashboard. Home Assistant provides no per-device name for this remainder. Therefore, the remainder is computed by a separate sensor and added as a device under the parent.</div>
+        <div class="tags">
+          <a href="#tag-home-assistant">#home-assistant</a>
+          <a href="#tag-energy">#energy</a>
+        </div>
+      </div>
     </div>
     <div class="entry t-meshtastic t-raspberry-pi t-linux">
       <time>2025-10-03</time>
       <div>
-        <a class="entry-title" href="./2025-09-meshtastic-daemon.html">Running Meshtastic Daemon on Raspberry Pi 4B</a> <span class="new">NEW!</span>
+        <a class="entry-title" href="./2025-09-meshtastic-daemon.html">Running Meshtastic Daemon on Raspberry Pi 4B</a>
         <div class="blurb">Building and running meshtasticd on ArchLinuxARM with a Waveshare SX1268 LoRa HAT.</div>
         <div class="tags">
           <a href="#tag-meshtastic">#meshtastic</a>
