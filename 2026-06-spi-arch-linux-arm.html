@@ -65,7 +65,6 @@ SPDX-License-Identifier: Unlicense
     .sign-title {
       font: bold 22px/1.1 Verdana, Geneva, sans-serif;
       letter-spacing: 1px;
-      text-transform: uppercase;
     }
     .sign-tagline {
       font: bold 11px/1.4 Verdana, Geneva, sans-serif;
@@ -239,13 +238,13 @@ SPDX-License-Identifier: Unlicense
   <header>
     <a class="sign" href="./index.html">
       <span class="sign-inner">
-        <span class="sign-title">COM0 on the Web</span>
-        <span class="sign-tagline">l5yth, freelance engineer</span>
+        <span class="sign-title">/dev/COM0</span>
+        <span class="sign-tagline">Afri Blanck, Engineer</span>
       </span>
     </a>
     <nav class="buttons">
       <a href="./index.html#about">About me</a>
-      <a href="./index.html#blog">Blog</a>
+      <a href="./blog.html">Blog</a>
       <a href="./index.html#contact">Contact</a>
     </nav>
   </header>
@@ -254,9 +253,9 @@ SPDX-License-Identifier: Unlicense
     <div class="label">Blog / 2026-06-01</div>
     <h1>Enabling SPI on Arch Linux ARM (Raspberry Pi 4, aarch64)</h1>
     <div class="tags">
-      <a href="./index.html#tag-raspberry-pi">#raspberry-pi</a>
-      <a href="./index.html#tag-arch-linux">#arch-linux</a>
-      <a href="./index.html#tag-linux">#linux</a>
+      <a href="./blog.html#tag-raspberry-pi">#raspberry-pi</a>
+      <a href="./blog.html#tag-arch-linux">#arch-linux</a>
+      <a href="./blog.html#tag-linux">#linux</a>
     </div>
     <p><i>Originally published on <a href="https://dev.to/l5y/enabling-spi-on-arch-linux-arm-raspberry-pi-4-aarch64-ci4">dev.to</a>.</i></p>
     <p><em>You add <code>dtparam=spi=on</code> to <code>/boot/config.txt</code>, reboot, and... there's no <code>/dev/spidev*</code>. On the <strong>AArch64</strong> Arch Linux ARM image this is expected, and the fix isn't more <code>config.txt</code> tweaking. Here's the clean way.</em></p>
@@ -347,7 +346,7 @@ SUBSYSTEM=="spidev", GROUP="spi", MODE="0660"
     <footer>
       <hr>
       <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes">
-      <div><a href="./index.html">Back to COM0 on the Web</a></div>
+      <div><a href="./index.html">Back to /dev/COM0</a></div>
     </footer>
   </article>
 </body>

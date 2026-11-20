@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: 2026 l5yth
+SPDX-License-Identifier: Unlicense
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blog &#8211; /dev/COM0</title>
+  <style>
+    body {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 16px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      background: #c2c09f url(./tile.png);
+      color: #111;
+      font: 17px/1.45 "Times New Roman", serif;
+    }
+    a:link {
+      color: #0000ee;
+    }
+    a:visited {
+      color: #551a8b;
+    }
+    a:hover {
+      color: #ff0000;
+    }
+    @keyframes l5y-blink {
+      50% {
+        visibility: hidden;
+      }
+    }
+
+    /* Masthead: the small sign links home, the buttons jump into it. */
+    header a.sign {
+      display: block;
+      text-decoration: none;
+      color: #efff02;
+      border: 6px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #efff02 0 6px, #000 6px 12px) border-box;
+      padding: 4px;
+    }
+    .sign-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 4px 16px;
+      border: 1px solid #efff02;
+      padding: 10px 14px;
+    }
+    .sign-title {
+      font: bold 22px/1.1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+    }
+    .sign-tagline {
+      font: bold 11px/1.4 Verdana, Geneva, sans-serif;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    nav.buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    nav.buttons a {
+      background: #d3d3d3;
+      color: #111;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      text-decoration: none;
+      padding: 8px 18px;
+      border: 1px solid;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    nav.buttons a:active {
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+      box-shadow: inset 1px 1px 0 #797a7a;
+    }
+
+    /* The archive box and its hazard-striped label, the page's heading. */
+    .box {
+      position: relative;
+      background: #fdf5e6;
+      border: 3px double #8b4513;
+      padding: 22px 28px 24px;
+      scroll-margin-top: 30px;
+    }
+    .label {
+      position: absolute;
+      top: -15px;
+      left: 18px;
+      margin: 0;
+      border: 3px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #f0e010 0 3px, #000 3px 6px) border-box;
+      color: #40a0f0;
+      text-shadow: 0 0 5px #40a0f0;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+    }
+
+    /* Every post, with the tag filter running on :target. */
+    .tag-anchor {
+      position: absolute;
+      top: -30px;
+      left: 0;
+    }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 0 16px;
+    }
+    .filters-label {
+      font: 13px monospace;
+      color: #8b4513;
+      margin-right: 4px;
+    }
+    #blog .filters a {
+      background: #d3d3d3;
+      color: #111;
+      font: bold 11px/1 Verdana, Geneva, sans-serif;
+      text-decoration: none;
+      padding: 6px 10px;
+      border: 1px solid;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    #blog .filters .f-all,
+    #tag-linux:target ~ .filters .f-linux,
+    #tag-home-assistant:target ~ .filters .f-home-assistant,
+    #tag-arch-linux:target ~ .filters .f-arch-linux,
+    #tag-fronius:target ~ .filters .f-fronius,
+    #tag-meshtastic:target ~ .filters .f-meshtastic,
+    #tag-raspberry-pi:target ~ .filters .f-raspberry-pi,
+    #tag-rust:target ~ .filters .f-rust,
+    #tag-solar:target ~ .filters .f-solar,
+    #tag-arduino:target ~ .filters .f-arduino,
+    #tag-byd:target ~ .filters .f-byd,
+    #tag-cpp:target ~ .filters .f-cpp,
+    #tag-diy:target ~ .filters .f-diy,
+    #tag-energy:target ~ .filters .f-energy,
+    #tag-lego:target ~ .filters .f-lego,
+    #tag-lora:target ~ .filters .f-lora,
+    #tag-meshcore:target ~ .filters .f-meshcore,
+    #tag-python:target ~ .filters .f-python,
+    #tag-ruby:target ~ .filters .f-ruby,
+    #tag-self-hosting:target ~ .filters .f-self-hosting,
+    #tag-shelly:target ~ .filters .f-shelly,
+    #tag-tui:target ~ .filters .f-tui {
+      background: #efff02;
+      color: #000;
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+      box-shadow: inset 1px 1px 0 #797a7a;
+    }
+    #blog .tag-anchor:target ~ .filters .f-all {
+      background: #d3d3d3;
+      color: #111;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    #tag-linux:target ~ .entry:not(.t-linux),
+    #tag-home-assistant:target ~ .entry:not(.t-home-assistant),
+    #tag-arch-linux:target ~ .entry:not(.t-arch-linux),
+    #tag-fronius:target ~ .entry:not(.t-fronius),
+    #tag-meshtastic:target ~ .entry:not(.t-meshtastic),
+    #tag-raspberry-pi:target ~ .entry:not(.t-raspberry-pi),
+    #tag-rust:target ~ .entry:not(.t-rust),
+    #tag-solar:target ~ .entry:not(.t-solar),
+    #tag-arduino:target ~ .entry:not(.t-arduino),
+    #tag-byd:target ~ .entry:not(.t-byd),
+    #tag-cpp:target ~ .entry:not(.t-cpp),
+    #tag-diy:target ~ .entry:not(.t-diy),
+    #tag-energy:target ~ .entry:not(.t-energy),
+    #tag-lego:target ~ .entry:not(.t-lego),
+    #tag-lora:target ~ .entry:not(.t-lora),
+    #tag-meshcore:target ~ .entry:not(.t-meshcore),
+    #tag-python:target ~ .entry:not(.t-python),
+    #tag-ruby:target ~ .entry:not(.t-ruby),
+    #tag-self-hosting:target ~ .entry:not(.t-self-hosting),
+    #tag-shelly:target ~ .entry:not(.t-shelly),
+    #tag-tui:target ~ .entry:not(.t-tui) {
+      display: none;
+    }
+    .entry {
+      display: grid;
+      grid-template-columns: 86px minmax(0, 1fr);
+      gap: 0 14px;
+      align-items: baseline;
+      padding: 12px 0;
+      border-top: 1px solid #d2b48c;
+    }
+    .entry time {
+      font: 13px monospace;
+      color: #8b4513;
+    }
+    .entry-title {
+      font-weight: bold;
+      font-size: 19px;
+    }
+    .new {
+      display: inline-block;
+      vertical-align: middle;
+      background: #efff02;
+      color: #000;
+      font: bold 11px/1 Verdana, Geneva, sans-serif;
+      padding: 2px 4px;
+    }
+    .blurb {
+      margin-top: 2px;
+      font-size: 16px;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 12px;
+      margin: 6px 0 0;
+    }
+    #blog .tags a {
+      font: 13px monospace;
+      color: #8b4513;
+      text-decoration: none;
+    }
+    #blog .tags a:hover {
+      text-decoration: underline;
+    }
+
+    /* Footer inside the box: rule, mailbox GIF, the way home. */
+    #blog footer {
+      text-align: center;
+      font-style: italic;
+      margin-top: 22px;
+    }
+    #blog footer hr {
+      width: 50%;
+      margin: 0 auto 18px;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .new {
+        animation: l5y-blink 1s step-end infinite;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="sign" href="./index.html">
+      <span class="sign-inner">
+        <span class="sign-title">/dev/COM0</span>
+        <span class="sign-tagline">Afri Blanck, Engineer</span>
+      </span>
+    </a>
+    <nav class="buttons">
+      <a href="./index.html#about">About me</a>
+      <a href="#blog">Blog</a>
+      <a href="./index.html#contact">Contact</a>
+    </nav>
+  </header>
+
+  <section id="blog" class="box">
+    <h1 class="label">Blog / all posts</h1>
+    <span id="tag-linux" class="tag-anchor"></span>
+    <span id="tag-home-assistant" class="tag-anchor"></span>
+    <span id="tag-arch-linux" class="tag-anchor"></span>
+    <span id="tag-fronius" class="tag-anchor"></span>
+    <span id="tag-meshtastic" class="tag-anchor"></span>
+    <span id="tag-raspberry-pi" class="tag-anchor"></span>
+    <span id="tag-rust" class="tag-anchor"></span>
+    <span id="tag-solar" class="tag-anchor"></span>
+    <span id="tag-arduino" class="tag-anchor"></span>
+    <span id="tag-byd" class="tag-anchor"></span>
+    <span id="tag-cpp" class="tag-anchor"></span>
+    <span id="tag-diy" class="tag-anchor"></span>
+    <span id="tag-energy" class="tag-anchor"></span>
+    <span id="tag-lego" class="tag-anchor"></span>
+    <span id="tag-lora" class="tag-anchor"></span>
+    <span id="tag-meshcore" class="tag-anchor"></span>
+    <span id="tag-python" class="tag-anchor"></span>
+    <span id="tag-ruby" class="tag-anchor"></span>
+    <span id="tag-self-hosting" class="tag-anchor"></span>
+    <span id="tag-shelly" class="tag-anchor"></span>
+    <span id="tag-tui" class="tag-anchor"></span>
+    <div class="filters">
+      <span class="filters-label">Filter by tag:</span>
+      <a class="f-all" href="#blog">all</a>
+      <a class="f-linux" href="#tag-linux">#linux</a>
+      <a class="f-home-assistant" href="#tag-home-assistant">#home-assistant</a>
+      <a class="f-arch-linux" href="#tag-arch-linux">#arch-linux</a>
+      <a class="f-fronius" href="#tag-fronius">#fronius</a>
+      <a class="f-meshtastic" href="#tag-meshtastic">#meshtastic</a>
+      <a class="f-raspberry-pi" href="#tag-raspberry-pi">#raspberry-pi</a>
+      <a class="f-rust" href="#tag-rust">#rust</a>
+      <a class="f-solar" href="#tag-solar">#solar</a>
+      <a class="f-arduino" href="#tag-arduino">#arduino</a>
+      <a class="f-byd" href="#tag-byd">#byd</a>
+      <a class="f-cpp" href="#tag-cpp">#cpp</a>
+      <a class="f-diy" href="#tag-diy">#diy</a>
+      <a class="f-energy" href="#tag-energy">#energy</a>
+      <a class="f-lego" href="#tag-lego">#lego</a>
+      <a class="f-lora" href="#tag-lora">#lora</a>
+      <a class="f-meshcore" href="#tag-meshcore">#meshcore</a>
+      <a class="f-python" href="#tag-python">#python</a>
+      <a class="f-ruby" href="#tag-ruby">#ruby</a>
+      <a class="f-self-hosting" href="#tag-self-hosting">#self-hosting</a>
+      <a class="f-shelly" href="#tag-shelly">#shelly</a>
+      <a class="f-tui" href="#tag-tui">#tui</a>
+    </div>
+    <div class="entry t-home-assistant t-fronius t-solar">
+      <time>2026-11-19</time>
+      <div>
+        <a class="entry-title" href="./2026-11-fronius-seasonal-reserve.html">Seasonal battery reserve on a Fronius GEN24 with Home Assistant</a> <span class="new">NEW!</span>
+        <div class="blurb">This article describes a Home Assistant automation that sets the minimum battery reserve of a Fronius GEN24 inverter by month. The method uses local Modbus TCP and the core Fronius integration. It requires neither a cloud service nor a custom integration.</div>
+        <div class="tags">
+          <a href="#tag-home-assistant">#home-assistant</a>
+          <a href="#tag-fronius">#fronius</a>
+          <a href="#tag-solar">#solar</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-lego t-diy">
+      <time>2026-11-17</time>
+      <div>
+        <a class="entry-title" href="./2026-11-lego-concorde-wall-frame.html">LEGO Concorde 10318 on a wall frame: mounting procedure</a>
+        <div class="blurb">This article describes how the LEGO Concorde 10318 is mounted on a Mark's Magic wall display frame. The frame ships without written instructions. The plane is mounted nose up with one L-bracket under the keel end and one cable tie in the nose gear well.</div>
+        <div class="tags">
+          <a href="#tag-lego">#lego</a>
+          <a href="#tag-diy">#diy</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-linux t-arch-linux t-rust">
+      <time>2026-11-16</time>
+      <div>
+        <a class="entry-title" href="./2026-11-craft-apps-update-check.html">Craft apps: disabling the update check</a>
+        <div class="blurb">This article describes how the startup update check of the 13 Craft desktop apps is disabled. On the test system, the apps are installed from the Arch repositories only, while upstream publishes several releases per day. Therefore, every launch opened an "update available" prompt. The apps provide no setting for the check. The switch is a JSON file owned by the launcher.</div>
+        <div class="tags">
+          <a href="#tag-linux">#linux</a>
+          <a href="#tag-arch-linux">#arch-linux</a>
+          <a href="#tag-rust">#rust</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-fronius t-solar t-byd">
+      <time>2026-11-14</time>
+      <div>
+        <a class="entry-title" href="./2026-11-byd-hvs-breaker-trips.html">BYD HVS+ on Fronius GEN24: breaker trips traced to BMS firmware 1.28</a>
+        <div class="blurb">This article documents how recurring breaker trips of a BYD Battery-Box HVS+ on a Fronius GEN24 inverter were traced to the Battery Management System (BMS) firmware V1.28.0. In addition, it describes the firmware update over Bluetooth. The fix is not yet confirmed.</div>
+        <div class="tags">
+          <a href="#tag-fronius">#fronius</a>
+          <a href="#tag-solar">#solar</a>
+          <a href="#tag-byd">#byd</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-shelly t-home-assistant t-self-hosting">
+      <time>2026-11-13</time>
+      <div>
+        <a class="entry-title" href="./2026-11-shelly-camera-without-cloud.html">Shelly Camera without cloud</a>
+        <div class="blurb">This article describes how a Shelly Camera is operated without the Shelly cloud. A cloud-free Shelly camera app does not exist. However, the camera runs locally through its Web UI, the Real Time Streaming Protocol (RTSP), WebRTC, a Network File System (NFS) share, and MQTT.</div>
+        <div class="tags">
+          <a href="#tag-shelly">#shelly</a>
+          <a href="#tag-home-assistant">#home-assistant</a>
+          <a href="#tag-self-hosting">#self-hosting</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-home-assistant t-energy">
+      <time>2026-11-05</time>
+      <div>
+        <a class="entry-title" href="./2026-11-home-assistant-untracked-consumption.html">Home Assistant: naming untracked consumption per upstream device</a>
+        <div class="blurb">This article describes how the untracked consumption of an upstream device receives its own name in the Home Assistant energy dashboard. Home Assistant provides no per-device name for this remainder. Therefore, the remainder is computed by a separate sensor and added as a device under the parent.</div>
+        <div class="tags">
+          <a href="#tag-home-assistant">#home-assistant</a>
+          <a href="#tag-energy">#energy</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-arduino t-linux t-cpp">
+      <time>2026-06-01</time>
+      <div>
+        <a class="entry-title" href="./2026-06-ardulinux.html">ArduLinux: running Arduino firmware on Linux</a>
+        <div class="blurb">A clean-room continuation of portduino, why I forked it instead of fixing it in place, and what falls out when you stop patching your dependencies.</div>
+        <div class="tags">
+          <a href="#tag-arduino">#arduino</a>
+          <a href="#tag-linux">#linux</a>
+          <a href="#tag-cpp">#cpp</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-raspberry-pi t-arch-linux t-linux">
+      <time>2026-06-01</time>
+      <div>
+        <a class="entry-title" href="./2026-06-spi-arch-linux-arm.html">Enabling SPI on Arch Linux ARM (Raspberry Pi 4, aarch64)</a>
+        <div class="blurb">Switch to the Foundation kernel (linux-rpi) and SPI + overlays work natively.</div>
+        <div class="tags">
+          <a href="#tag-raspberry-pi">#raspberry-pi</a>
+          <a href="#tag-arch-linux">#arch-linux</a>
+          <a href="#tag-linux">#linux</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-meshcore t-lora t-linux">
+      <time>2026-03-15</time>
+      <div>
+        <a class="entry-title" href="./2026-03-meshcore-repeater.html">Running MeshCore Repeater Natively on a Raspberry Pi</a>
+        <div class="blurb">A Raspberry Pi running a MeshCore repeater or companion is a natural home for bots, bridges, and integrations.</div>
+        <div class="tags">
+          <a href="#tag-meshcore">#meshcore</a>
+          <a href="#tag-lora">#lora</a>
+          <a href="#tag-linux">#linux</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-rust t-linux t-tui">
+      <time>2026-03-07</time>
+      <div>
+        <a class="entry-title" href="./2026-03-psn.html">psn - a minimalist process navigator for Linux</a>
+        <div class="blurb">You launch it, find the process, and send it a signal; all without leaving the terminal or typing a PID by hand.</div>
+        <div class="tags">
+          <a href="#tag-rust">#rust</a>
+          <a href="#tag-linux">#linux</a>
+          <a href="#tag-tui">#tui</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-meshtastic t-raspberry-pi t-linux">
+      <time>2025-10-03</time>
+      <div>
+        <a class="entry-title" href="./2025-09-meshtastic-daemon.html">Running Meshtastic Daemon on Raspberry Pi 4B</a>
+        <div class="blurb">Building and running meshtasticd on ArchLinuxARM with a Waveshare SX1268 LoRa HAT.</div>
+        <div class="tags">
+          <a href="#tag-meshtastic">#meshtastic</a>
+          <a href="#tag-raspberry-pi">#raspberry-pi</a>
+          <a href="#tag-linux">#linux</a>
+        </div>
+      </div>
+    </div>
+    <div class="entry t-meshtastic t-ruby t-python">
+      <time>2025-09-22</time>
+      <div>
+        <a class="entry-title" href="./2025-09-potato-mesh.html">PotatoMesh what and why</a>
+        <div class="blurb">How it works, how it plugs into Meshtastic, and how you can run your own.</div>
+        <div class="tags">
+          <a href="#tag-meshtastic">#meshtastic</a>
+          <a href="#tag-ruby">#ruby</a>
+          <a href="#tag-python">#python</a>
+        </div>
+      </div>
+    </div>
+    <footer>
+      <hr>
+      <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes">
+      <div><a href="./index.html">Back to /dev/COM0</a></div>
+    </footer>
+  </section>
+</body>
+</html>

@@ -7,7 +7,7 @@ SPDX-License-Identifier: Unlicense
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>COM0 on the Web</title>
+  <title>/dev/COM0</title>
   <style>
     body {
       max-width: 720px;
@@ -34,6 +34,11 @@ SPDX-License-Identifier: Unlicense
         visibility: hidden;
       }
     }
+    @keyframes l5y-ticker {
+      to {
+        transform: translateX(-100%);
+      }
+    }
 
     /* Masthead: the construction sign, its ticker and the three buttons. */
     header {
@@ -55,7 +60,6 @@ SPDX-License-Identifier: Unlicense
       padding: 24px 16px 6px;
       font: bold clamp(30px, 8vw, 52px)/1.05 Verdana, Geneva, sans-serif;
       letter-spacing: 1px;
-      text-transform: uppercase;
       text-wrap: balance;
     }
     .tagline {
@@ -72,12 +76,17 @@ SPDX-License-Identifier: Unlicense
       letter-spacing: 1px;
       text-transform: uppercase;
     }
-    /* Still by default; the marquee runs only when motion is welcome. */
-    .ticker marquee {
-      display: none;
-    }
-    .ticker-still {
+    /* Still by default; the line scrolls only when motion is welcome. */
+    .ticker-line {
+      margin: 0;
       padding: 0 10px;
+    }
+    .ticker a,
+    .ticker a:visited {
+      color: inherit;
+    }
+    .ticker a:hover {
+      color: #ff0000;
     }
     nav.buttons {
       display: flex;
@@ -86,7 +95,8 @@ SPDX-License-Identifier: Unlicense
       gap: 10px;
       margin-top: 16px;
     }
-    nav.buttons a {
+    nav.buttons a,
+    #blog .read-more a {
       background: #d3d3d3;
       color: #111;
       font: bold 12px/1 Verdana, Geneva, sans-serif;
@@ -96,7 +106,8 @@ SPDX-License-Identifier: Unlicense
       border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
       box-shadow: inset -1px -1px 0 #797a7a;
     }
-    nav.buttons a:active {
+    nav.buttons a:active,
+    #blog .read-more a:active {
       border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
       box-shadow: inset 1px 1px 0 #797a7a;
     }
@@ -156,105 +167,21 @@ SPDX-License-Identifier: Unlicense
       border-top: 1px solid #d2b48c;
       padding-top: 12px;
     }
-    .chips {
+    .skill-tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 5px;
+      gap: 2px 12px;
       margin-top: 6px;
     }
-    .chips code {
-      font: 13px/1.5 monospace;
-      background: #fffaf0;
-      padding: 0 3px;
-      border: 1px dotted #d2b48c;
-    }
-
-    /* Latest blog posts, with the tag filter running on :target. */
-    #blog {
-      padding: 22px 28px 10px;
-    }
-    .tag-anchor {
-      position: absolute;
-      top: -30px;
-      left: 0;
-    }
-    .filters {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 0 16px;
-    }
-    .filters-label {
+    .skill-tags span {
       font: 13px monospace;
       color: #8b4513;
-      margin-right: 4px;
+      text-transform: lowercase;
     }
-    #blog .filters a {
-      background: #d3d3d3;
-      color: #111;
-      font: bold 11px/1 Verdana, Geneva, sans-serif;
-      text-decoration: none;
-      padding: 6px 10px;
-      border: 1px solid;
-      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
-      box-shadow: inset -1px -1px 0 #797a7a;
-    }
-    #blog .filters .f-all,
-    #tag-linux:target ~ .filters .f-linux,
-    #tag-home-assistant:target ~ .filters .f-home-assistant,
-    #tag-arch-linux:target ~ .filters .f-arch-linux,
-    #tag-fronius:target ~ .filters .f-fronius,
-    #tag-meshtastic:target ~ .filters .f-meshtastic,
-    #tag-raspberry-pi:target ~ .filters .f-raspberry-pi,
-    #tag-rust:target ~ .filters .f-rust,
-    #tag-solar:target ~ .filters .f-solar,
-    #tag-arduino:target ~ .filters .f-arduino,
-    #tag-byd:target ~ .filters .f-byd,
-    #tag-cpp:target ~ .filters .f-cpp,
-    #tag-diy:target ~ .filters .f-diy,
-    #tag-energy:target ~ .filters .f-energy,
-    #tag-lego:target ~ .filters .f-lego,
-    #tag-lora:target ~ .filters .f-lora,
-    #tag-meshcore:target ~ .filters .f-meshcore,
-    #tag-python:target ~ .filters .f-python,
-    #tag-ruby:target ~ .filters .f-ruby,
-    #tag-self-hosting:target ~ .filters .f-self-hosting,
-    #tag-shelly:target ~ .filters .f-shelly,
-    #tag-tui:target ~ .filters .f-tui {
-      background: #efff02;
-      color: #000;
-      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
-      box-shadow: inset 1px 1px 0 #797a7a;
-    }
-    #blog .tag-anchor:target ~ .filters .f-all {
-      background: #d3d3d3;
-      color: #111;
-      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
-      box-shadow: inset -1px -1px 0 #797a7a;
-    }
-    #tag-linux:target ~ .entry:not(.t-linux),
-    #tag-home-assistant:target ~ .entry:not(.t-home-assistant),
-    #tag-arch-linux:target ~ .entry:not(.t-arch-linux),
-    #tag-fronius:target ~ .entry:not(.t-fronius),
-    #tag-meshtastic:target ~ .entry:not(.t-meshtastic),
-    #tag-raspberry-pi:target ~ .entry:not(.t-raspberry-pi),
-    #tag-rust:target ~ .entry:not(.t-rust),
-    #tag-solar:target ~ .entry:not(.t-solar),
-    #tag-arduino:target ~ .entry:not(.t-arduino),
-    #tag-byd:target ~ .entry:not(.t-byd),
-    #tag-cpp:target ~ .entry:not(.t-cpp),
-    #tag-diy:target ~ .entry:not(.t-diy),
-    #tag-energy:target ~ .entry:not(.t-energy),
-    #tag-lego:target ~ .entry:not(.t-lego),
-    #tag-lora:target ~ .entry:not(.t-lora),
-    #tag-meshcore:target ~ .entry:not(.t-meshcore),
-    #tag-python:target ~ .entry:not(.t-python),
-    #tag-ruby:target ~ .entry:not(.t-ruby),
-    #tag-self-hosting:target ~ .entry:not(.t-self-hosting),
-    #tag-shelly:target ~ .entry:not(.t-shelly),
-    #tag-tui:target ~ .entry:not(.t-tui) {
-      display: none;
+
+    /* Latest blog posts: three in full, five by title, then the archive. */
+    #blog {
+      padding: 30px 28px 22px;
     }
     .entry {
       display: grid;
@@ -264,7 +191,12 @@ SPDX-License-Identifier: Unlicense
       padding: 12px 0;
       border-top: 1px solid #d2b48c;
     }
-    .entry time {
+    #blog .label + .entry {
+      padding: 0 0 12px;
+      border-top: 0;
+    }
+    .entry time,
+    .older-row time {
       font: 13px monospace;
       color: #8b4513;
     }
@@ -298,38 +230,104 @@ SPDX-License-Identifier: Unlicense
     #blog .tags a:hover {
       text-decoration: underline;
     }
+    .older {
+      border-top: 1px solid #d2b48c;
+      padding: 12px 0 0;
+    }
+    .older-label {
+      font: 13px monospace;
+      color: #8b4513;
+      margin-bottom: 4px;
+    }
+    .older-row {
+      display: grid;
+      grid-template-columns: 86px minmax(0, 1fr);
+      gap: 0 14px;
+      align-items: baseline;
+      padding: 3px 0;
+    }
+    .read-more {
+      display: grid;
+      grid-template-columns: 86px minmax(0, 1fr);
+      gap: 0 14px;
+      padding: 16px 0 0;
+    }
+    #blog .read-more a {
+      grid-column: 2;
+      justify-self: start;
+    }
 
-    /* Contact. */
+    /* Contact: one tile per channel, then mail and the 1998 footer. */
     #contact {
       padding: 36px 28px 24px;
       text-align: center;
     }
-    .socials {
-      position: relative;
-      max-width: 480px;
+    .tiles {
+      box-sizing: border-box;
       margin: 0 auto;
+      background: #c2c09f url(./tile.png);
+      padding: 26px 6px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 22px 10px;
     }
-    .socials img {
+    .tile {
+      width: 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+    }
+    .tile-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 96px;
+      height: 96px;
+      box-sizing: border-box;
+      background: #d3d3d3;
+      border: 1px solid;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    .tile-icon img {
       display: block;
-      width: 100%;
-      height: auto;
+      image-rendering: pixelated;
     }
-    .socials a {
-      position: absolute;
-      top: 0;
-      height: 100%;
+    .tile-label {
+      position: relative;
+      margin-top: -4px;
+      border: 3px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #f0e010 0 3px, #000 3px 6px) border-box;
+      font: bold 11px/1 Verdana, Geneva, sans-serif;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      padding: 4px 7px;
+      white-space: nowrap;
     }
-    .social-reddit {
-      left: 0;
-      width: 33.33%;
+    .tile-reddit .tile-label {
+      color: #f05000;
+      text-shadow: 0 0 5px #f05000;
     }
-    .social-bluesky {
-      left: 33.33%;
-      width: 33.34%;
+    .tile-bluesky .tile-label {
+      color: #40a0f0;
+      text-shadow: 0 0 5px #40a0f0;
     }
-    .social-github {
-      left: 66.67%;
-      width: 33.33%;
+    .tile-github .tile-label {
+      color: #0f0;
+      text-shadow: 0 0 5px #0f0;
+    }
+    .tile-signal .tile-label {
+      color: #8a96ff;
+      text-shadow: 0 0 5px #8a96ff;
+    }
+    .tile-matrix .tile-label {
+      color: #fff;
+      text-shadow: 0 0 5px #fff;
     }
     .mail {
       margin: 16px 0 0;
@@ -344,11 +342,19 @@ SPDX-License-Identifier: Unlicense
     }
 
     @media (prefers-reduced-motion: no-preference) {
-      .ticker marquee {
-        display: block;
+      .ticker {
+        overflow: hidden;
+        overflow: clip;
+        white-space: nowrap;
       }
-      .ticker-still {
-        display: none;
+      .ticker-line {
+        display: inline-block;
+        padding: 0 0 0 100%;
+        animation: l5y-ticker 34s linear infinite;
+      }
+      .ticker:hover .ticker-line,
+      .ticker:focus-within .ticker-line {
+        animation-play-state: paused;
       }
       .new {
         animation: l5y-blink 1s step-end infinite;
@@ -360,11 +366,10 @@ SPDX-License-Identifier: Unlicense
   <header>
     <div class="sign">
       <div class="sign-inner">
-        <h1>COM0 on the Web</h1>
-        <p class="tagline">l5yth, freelance engineer</p>
+        <h1>/dev/COM0</h1>
+        <p class="tagline">Afri Blanck, Engineer</p>
         <div class="ticker">
-          <marquee scrollamount="4">Welcome to my homepage! +++ New on the blog: Seasonal battery reserve on a Fronius GEN24 with Home Assistant +++</marquee>
-          <div class="ticker-still">Welcome to my homepage! +++ New on the blog: Seasonal battery reserve on a Fronius GEN24 with Home Assistant +++</div>
+          <p class="ticker-line">Welcome to my homepage! +++ New on the blog: <a href="./2026-11-fronius-seasonal-reserve.html">Seasonal battery reserve on a Fronius GEN24 with Home Assistant</a> +++</p>
         </div>
       </div>
     </div>
@@ -377,30 +382,32 @@ SPDX-License-Identifier: Unlicense
 
   <section id="about" class="box">
     <h2 class="label">About me</h2>
-    <p class="lead">Hi, I'm l5yth, a freelance engineer.</p>
-    <p class="pitch">I write software and run the hardware it lives on. My latest project is <a href="https://potatomesh.net">PotatoMesh</a>, a web dashboard for Meshtastic community meshes. Need an engineer? <a href="#contact">Get in touch</a>.</p>
+    <p class="lead">Hi, I'm Afri @l5yth Blanck, software engineer.</p>
+    <p class="pitch">I build low-level, privacy-first systems: protocols, tooling, and infrastructure. <del>12</del> 13 years of open source work across security, peer-to-peer networking, and operations. Need an engineer? <a href="#contact">Get in touch</a>.</p>
     <div class="skills">
       <div class="skill">
-        <b>Web apps &amp; APIs</b>
-        <div class="chips">
-          <code>Ruby</code>
-          <code>Python</code>
-          <code>SQLite</code>
+        <b>Linux</b>
+        <div class="skill-tags">
+          <span>#Archlinux</span>
+          <span>#Gentoo</span>
+          <span>#NixOS</span>
+          <span>#ZSH</span>
         </div>
       </div>
       <div class="skill">
-        <b>Embedded Linux</b>
-        <div class="chips">
-          <code>Raspberry Pi</code>
-          <code>Arch Linux ARM</code>
-          <code>systemd</code>
+        <b>Programming</b>
+        <div class="skill-tags">
+          <span>#Rust</span>
+          <span>#Crystal</span>
+          <span>#Zig</span>
         </div>
       </div>
       <div class="skill">
-        <b>LoRa mesh networks</b>
-        <div class="chips">
-          <code>Meshtastic</code>
-          <code>protobufs</code>
+        <b>Decentralization</b>
+        <div class="skill-tags">
+          <span>#Meshtastic</span>
+          <span>#Meshcore</span>
+          <span>#Reticulum</span>
         </div>
       </div>
     </div>
@@ -408,203 +415,92 @@ SPDX-License-Identifier: Unlicense
 
   <section id="blog" class="box">
     <h2 class="label">Latest blog posts</h2>
-    <span id="tag-linux" class="tag-anchor"></span>
-    <span id="tag-home-assistant" class="tag-anchor"></span>
-    <span id="tag-arch-linux" class="tag-anchor"></span>
-    <span id="tag-fronius" class="tag-anchor"></span>
-    <span id="tag-meshtastic" class="tag-anchor"></span>
-    <span id="tag-raspberry-pi" class="tag-anchor"></span>
-    <span id="tag-rust" class="tag-anchor"></span>
-    <span id="tag-solar" class="tag-anchor"></span>
-    <span id="tag-arduino" class="tag-anchor"></span>
-    <span id="tag-byd" class="tag-anchor"></span>
-    <span id="tag-cpp" class="tag-anchor"></span>
-    <span id="tag-diy" class="tag-anchor"></span>
-    <span id="tag-energy" class="tag-anchor"></span>
-    <span id="tag-lego" class="tag-anchor"></span>
-    <span id="tag-lora" class="tag-anchor"></span>
-    <span id="tag-meshcore" class="tag-anchor"></span>
-    <span id="tag-python" class="tag-anchor"></span>
-    <span id="tag-ruby" class="tag-anchor"></span>
-    <span id="tag-self-hosting" class="tag-anchor"></span>
-    <span id="tag-shelly" class="tag-anchor"></span>
-    <span id="tag-tui" class="tag-anchor"></span>
-    <div class="filters">
-      <span class="filters-label">Filter by tag:</span>
-      <a class="f-all" href="#blog">all</a>
-      <a class="f-linux" href="#tag-linux">#linux</a>
-      <a class="f-home-assistant" href="#tag-home-assistant">#home-assistant</a>
-      <a class="f-arch-linux" href="#tag-arch-linux">#arch-linux</a>
-      <a class="f-fronius" href="#tag-fronius">#fronius</a>
-      <a class="f-meshtastic" href="#tag-meshtastic">#meshtastic</a>
-      <a class="f-raspberry-pi" href="#tag-raspberry-pi">#raspberry-pi</a>
-      <a class="f-rust" href="#tag-rust">#rust</a>
-      <a class="f-solar" href="#tag-solar">#solar</a>
-      <a class="f-arduino" href="#tag-arduino">#arduino</a>
-      <a class="f-byd" href="#tag-byd">#byd</a>
-      <a class="f-cpp" href="#tag-cpp">#cpp</a>
-      <a class="f-diy" href="#tag-diy">#diy</a>
-      <a class="f-energy" href="#tag-energy">#energy</a>
-      <a class="f-lego" href="#tag-lego">#lego</a>
-      <a class="f-lora" href="#tag-lora">#lora</a>
-      <a class="f-meshcore" href="#tag-meshcore">#meshcore</a>
-      <a class="f-python" href="#tag-python">#python</a>
-      <a class="f-ruby" href="#tag-ruby">#ruby</a>
-      <a class="f-self-hosting" href="#tag-self-hosting">#self-hosting</a>
-      <a class="f-shelly" href="#tag-shelly">#shelly</a>
-      <a class="f-tui" href="#tag-tui">#tui</a>
-    </div>
-    <div class="entry t-home-assistant t-fronius t-solar">
+    <div class="entry">
       <time>2026-11-19</time>
       <div>
         <a class="entry-title" href="./2026-11-fronius-seasonal-reserve.html">Seasonal battery reserve on a Fronius GEN24 with Home Assistant</a> <span class="new">NEW!</span>
         <div class="blurb">This article describes a Home Assistant automation that sets the minimum battery reserve of a Fronius GEN24 inverter by month. The method uses local Modbus TCP and the core Fronius integration. It requires neither a cloud service nor a custom integration.</div>
         <div class="tags">
-          <a href="#tag-home-assistant">#home-assistant</a>
-          <a href="#tag-fronius">#fronius</a>
-          <a href="#tag-solar">#solar</a>
+          <a href="./blog.html#tag-home-assistant">#home-assistant</a>
+          <a href="./blog.html#tag-fronius">#fronius</a>
+          <a href="./blog.html#tag-solar">#solar</a>
         </div>
       </div>
     </div>
-    <div class="entry t-lego t-diy">
+    <div class="entry">
       <time>2026-11-17</time>
       <div>
         <a class="entry-title" href="./2026-11-lego-concorde-wall-frame.html">LEGO Concorde 10318 on a wall frame: mounting procedure</a>
         <div class="blurb">This article describes how the LEGO Concorde 10318 is mounted on a Mark's Magic wall display frame. The frame ships without written instructions. The plane is mounted nose up with one L-bracket under the keel end and one cable tie in the nose gear well.</div>
         <div class="tags">
-          <a href="#tag-lego">#lego</a>
-          <a href="#tag-diy">#diy</a>
+          <a href="./blog.html#tag-lego">#lego</a>
+          <a href="./blog.html#tag-diy">#diy</a>
         </div>
       </div>
     </div>
-    <div class="entry t-linux t-arch-linux t-rust">
+    <div class="entry">
       <time>2026-11-16</time>
       <div>
         <a class="entry-title" href="./2026-11-craft-apps-update-check.html">Craft apps: disabling the update check</a>
         <div class="blurb">This article describes how the startup update check of the 13 Craft desktop apps is disabled. On the test system, the apps are installed from the Arch repositories only, while upstream publishes several releases per day. Therefore, every launch opened an "update available" prompt. The apps provide no setting for the check. The switch is a JSON file owned by the launcher.</div>
         <div class="tags">
-          <a href="#tag-linux">#linux</a>
-          <a href="#tag-arch-linux">#arch-linux</a>
-          <a href="#tag-rust">#rust</a>
+          <a href="./blog.html#tag-linux">#linux</a>
+          <a href="./blog.html#tag-arch-linux">#arch-linux</a>
+          <a href="./blog.html#tag-rust">#rust</a>
         </div>
       </div>
     </div>
-    <div class="entry t-fronius t-solar t-byd">
-      <time>2026-11-14</time>
-      <div>
-        <a class="entry-title" href="./2026-11-byd-hvs-breaker-trips.html">BYD HVS+ on Fronius GEN24: breaker trips traced to BMS firmware 1.28</a>
-        <div class="blurb">This article documents how recurring breaker trips of a BYD Battery-Box HVS+ on a Fronius GEN24 inverter were traced to the Battery Management System (BMS) firmware V1.28.0. In addition, it describes the firmware update over Bluetooth. The fix is not yet confirmed.</div>
-        <div class="tags">
-          <a href="#tag-fronius">#fronius</a>
-          <a href="#tag-solar">#solar</a>
-          <a href="#tag-byd">#byd</a>
-        </div>
+    <div class="older">
+      <div class="older-label">Older posts:</div>
+      <div class="older-row">
+        <time>2026-11-14</time>
+        <a href="./2026-11-byd-hvs-breaker-trips.html">BYD HVS+ on Fronius GEN24: breaker trips traced to BMS firmware 1.28</a>
+      </div>
+      <div class="older-row">
+        <time>2026-11-13</time>
+        <a href="./2026-11-shelly-camera-without-cloud.html">Shelly Camera without cloud</a>
+      </div>
+      <div class="older-row">
+        <time>2026-11-05</time>
+        <a href="./2026-11-home-assistant-untracked-consumption.html">Home Assistant: naming untracked consumption per upstream device</a>
+      </div>
+      <div class="older-row">
+        <time>2026-06-01</time>
+        <a href="./2026-06-ardulinux.html">ArduLinux: running Arduino firmware on Linux</a>
+      </div>
+      <div class="older-row">
+        <time>2026-06-01</time>
+        <a href="./2026-06-spi-arch-linux-arm.html">Enabling SPI on Arch Linux ARM (Raspberry Pi 4, aarch64)</a>
       </div>
     </div>
-    <div class="entry t-shelly t-home-assistant t-self-hosting">
-      <time>2026-11-13</time>
-      <div>
-        <a class="entry-title" href="./2026-11-shelly-camera-without-cloud.html">Shelly Camera without cloud</a>
-        <div class="blurb">This article describes how a Shelly Camera is operated without the Shelly cloud. A cloud-free Shelly camera app does not exist. However, the camera runs locally through its Web UI, the Real Time Streaming Protocol (RTSP), WebRTC, a Network File System (NFS) share, and MQTT.</div>
-        <div class="tags">
-          <a href="#tag-shelly">#shelly</a>
-          <a href="#tag-home-assistant">#home-assistant</a>
-          <a href="#tag-self-hosting">#self-hosting</a>
-        </div>
-      </div>
-    </div>
-    <div class="entry t-home-assistant t-energy">
-      <time>2026-11-05</time>
-      <div>
-        <a class="entry-title" href="./2026-11-home-assistant-untracked-consumption.html">Home Assistant: naming untracked consumption per upstream device</a>
-        <div class="blurb">This article describes how the untracked consumption of an upstream device receives its own name in the Home Assistant energy dashboard. Home Assistant provides no per-device name for this remainder. Therefore, the remainder is computed by a separate sensor and added as a device under the parent.</div>
-        <div class="tags">
-          <a href="#tag-home-assistant">#home-assistant</a>
-          <a href="#tag-energy">#energy</a>
-        </div>
-      </div>
-    </div>
-    <div class="entry t-arduino t-linux t-cpp">
-      <time>2026-06-01</time>
-      <div>
-        <a class="entry-title" href="./2026-06-ardulinux.html">ArduLinux: running Arduino firmware on Linux</a>
-        <div class="blurb">A clean-room continuation of portduino, why I forked it instead of fixing it in place, and what falls out when you stop patching your dependencies.</div>
-        <div class="tags">
-          <a href="#tag-arduino">#arduino</a>
-          <a href="#tag-linux">#linux</a>
-          <a href="#tag-cpp">#cpp</a>
-        </div>
-      </div>
-    </div>
-    <div class="entry t-raspberry-pi t-arch-linux t-linux">
-      <time>2026-06-01</time>
-      <div>
-        <a class="entry-title" href="./2026-06-spi-arch-linux-arm.html">Enabling SPI on Arch Linux ARM (Raspberry Pi 4, aarch64)</a>
-        <div class="blurb">Switch to the Foundation kernel (linux-rpi) and SPI + overlays work natively.</div>
-        <div class="tags">
-          <a href="#tag-raspberry-pi">#raspberry-pi</a>
-          <a href="#tag-arch-linux">#arch-linux</a>
-          <a href="#tag-linux">#linux</a>
-        </div>
-      </div>
-    </div>
-    <div class="entry t-meshcore t-lora t-linux">
-      <time>2026-03-15</time>
-      <div>
-        <a class="entry-title" href="./2026-03-meshcore-repeater.html">Running MeshCore Repeater Natively on a Raspberry Pi</a>
-        <div class="blurb">A Raspberry Pi running a MeshCore repeater or companion is a natural home for bots, bridges, and integrations.</div>
-        <div class="tags">
-          <a href="#tag-meshcore">#meshcore</a>
-          <a href="#tag-lora">#lora</a>
-          <a href="#tag-linux">#linux</a>
-        </div>
-      </div>
-    </div>
-    <div class="entry t-rust t-linux t-tui">
-      <time>2026-03-07</time>
-      <div>
-        <a class="entry-title" href="./2026-03-psn.html">psn - a minimalist process navigator for Linux</a>
-        <div class="blurb">You launch it, find the process, and send it a signal; all without leaving the terminal or typing a PID by hand.</div>
-        <div class="tags">
-          <a href="#tag-rust">#rust</a>
-          <a href="#tag-linux">#linux</a>
-          <a href="#tag-tui">#tui</a>
-        </div>
-      </div>
-    </div>
-    <div class="entry t-meshtastic t-raspberry-pi t-linux">
-      <time>2025-10-03</time>
-      <div>
-        <a class="entry-title" href="./2025-09-meshtastic-daemon.html">Running Meshtastic Daemon on Raspberry Pi 4B</a>
-        <div class="blurb">Building and running meshtasticd on ArchLinuxARM with a Waveshare SX1268 LoRa HAT.</div>
-        <div class="tags">
-          <a href="#tag-meshtastic">#meshtastic</a>
-          <a href="#tag-raspberry-pi">#raspberry-pi</a>
-          <a href="#tag-linux">#linux</a>
-        </div>
-      </div>
-    </div>
-    <div class="entry t-meshtastic t-ruby t-python">
-      <time>2025-09-22</time>
-      <div>
-        <a class="entry-title" href="./2025-09-potato-mesh.html">PotatoMesh what and why</a>
-        <div class="blurb">How it works, how it plugs into Meshtastic, and how you can run your own.</div>
-        <div class="tags">
-          <a href="#tag-meshtastic">#meshtastic</a>
-          <a href="#tag-ruby">#ruby</a>
-          <a href="#tag-python">#python</a>
-        </div>
-      </div>
+    <div class="read-more">
+      <a href="./blog.html" aria-label="Read more: all blog posts">Read more &#187;</a>
     </div>
   </section>
 
   <section id="contact" class="box">
     <h2 class="label">Contact</h2>
-    <div class="socials">
-      <img src="./socials.png" width="480" height="206" alt="Social links: Reddit, Bluesky, GitHub">
-      <a class="social-reddit" href="https://www.reddit.com/user/l5yth/" aria-label="Reddit profile"></a>
-      <a class="social-bluesky" href="https://bsky.app/profile/l5y.tech" aria-label="Bluesky profile"></a>
-      <a class="social-github" href="https://github.com/l5yth" aria-label="GitHub profile"></a>
+    <div class="tiles">
+      <a class="tile tile-reddit" href="https://www.reddit.com/user/l5yth/">
+        <span class="tile-icon"><img src="./icon-reddit.png" width="88" height="88" alt="Reddit logo"></span>
+        <span class="tile-label">Reddit.com</span>
+      </a>
+      <a class="tile tile-bluesky" href="https://bsky.app/profile/l5y.tech">
+        <span class="tile-icon"><img src="./icon-bluesky.png" width="88" height="88" alt="Bluesky logo"></span>
+        <span class="tile-label">Bluesky beta</span>
+      </a>
+      <a class="tile tile-github" href="https://github.com/l5yth">
+        <span class="tile-icon"><img src="./icon-github.png" width="88" height="88" alt="GitHub logo"></span>
+        <span class="tile-label">GitHub repo</span>
+      </a>
+      <a class="tile tile-signal" href="https://signal.me/#eu/hdCCT1LcP69C-Jh0jWE-gGZ0KdbmYh75Vdf9rW4Zyk52r_1fia9OnK9d9yor_GBC">
+        <span class="tile-icon"><img src="./icon-signal.png" width="88" height="88" alt="Signal logo"></span>
+        <span class="tile-label">SIGNAL MSG</span>
+      </a>
+      <a class="tile tile-matrix" href="https://matrix.to/#/@afri:c-base.org">
+        <span class="tile-icon"><img src="./icon-matrix.png" width="88" height="88" alt="Matrix logo"></span>
+        <span class="tile-label">MATRIX CHAT</span>
+      </a>
     </div>
     <p class="mail"><a href="mailto:COM0@l5y.tech" target="_blank">📧 Click here to email me!</a> (<a href="./com0.l5y.tech.pub.asc" target="_blank">PGP</a>)</p>
     <hr>
