@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: 2026 l5yth
+SPDX-License-Identifier: Unlicense
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026-11 Craft apps: disabling the update check</title>
+  <meta name="description" content="This article describes how the startup update check of the 13 Craft desktop apps is disabled. On the test system, the apps are installed from the Arch repositories only, while upstream publishes several releases per day. Therefore, every launch opened an &quot;update available&quot; prompt. The apps provide no setting for the check. The switch is a JSON file owned by the launcher.">
+  <meta name="author" content="l5yth">
+  <meta name="keywords" content="linux, arch-linux, rust">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Craft apps: disabling the update check">
+  <meta property="og:description" content="This article describes how the startup update check of the 13 Craft desktop apps is disabled. On the test system, the apps are installed from the Arch repositories only, while upstream publishes several releases per day. Therefore, every launch opened an &quot;update available&quot; prompt. The apps provide no setting for the check. The switch is a JSON file owned by the launcher.">
+  <meta property="article:published_time" content="2026-11-16">
+  <meta property="article:tag" content="linux">
+  <meta property="article:tag" content="arch-linux">
+  <meta property="article:tag" content="rust">
+  <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "BlogPosting", "headline": "Craft apps: disabling the update check", "description": "This article describes how the startup update check of the 13 Craft desktop apps is disabled. On the test system, the apps are installed from the Arch repositories only, while upstream publishes several releases per day. Therefore, every launch opened an \"update available\" prompt. The apps provide no setting for the check. The switch is a JSON file owned by the launcher.", "datePublished": "2026-11-16", "keywords": "linux, arch-linux, rust", "author": { "@type": "Person", "name": "l5yth" } }</script>
+  <style>
+    body {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 16px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      background: #c2c09f url(./tile.png);
+      color: #111;
+      font: 18px/1.5 "Times New Roman", serif;
+    }
+    a:link {
+      color: #0000ee;
+    }
+    a:visited {
+      color: #551a8b;
+    }
+    a:hover {
+      color: #ff0000;
+    }
+
+    /* Masthead: the small sign links home, the buttons jump into it. */
+    header a.sign {
+      display: block;
+      text-decoration: none;
+      color: #efff02;
+      border: 6px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #efff02 0 6px, #000 6px 12px) border-box;
+      padding: 4px;
+    }
+    .sign-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 4px 16px;
+      border: 1px solid #efff02;
+      padding: 10px 14px;
+    }
+    .sign-title {
+      font: bold 22px/1.1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .sign-tagline {
+      font: bold 11px/1.4 Verdana, Geneva, sans-serif;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    nav.buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    nav.buttons a {
+      background: #d3d3d3;
+      color: #111;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      text-decoration: none;
+      padding: 8px 18px;
+      border: 1px solid;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    nav.buttons a:active {
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+      box-shadow: inset 1px 1px 0 #797a7a;
+    }
+
+    /* The article box, its hazard-striped label, title and tags. */
+    article.post {
+      position: relative;
+      background: #fdf5e6;
+      border: 3px double #8b4513;
+      padding: 36px 28px 24px;
+    }
+    .label {
+      position: absolute;
+      top: -15px;
+      left: 18px;
+      border: 3px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #f0e010 0 3px, #000 3px 6px) border-box;
+      color: #40a0f0;
+      text-shadow: 0 0 5px #40a0f0;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+    }
+    article.post h1 {
+      margin: 0 0 8px;
+      font: bold 34px/1.15 Georgia, serif;
+      text-wrap: balance;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 12px;
+      margin: 0 0 22px;
+    }
+    article.post .tags a {
+      font: 13px monospace;
+      color: #8b4513;
+      text-decoration: none;
+    }
+    article.post .tags a:hover {
+      text-decoration: underline;
+    }
+
+    /* The post body: its markup is unchanged, only these rules restyle it. */
+    article.post hr {
+      margin: 28px 0;
+    }
+    article.post h2 {
+      font: bold 24px/1.25 Georgia, serif;
+      margin: 1.5em 0 .5em;
+    }
+    article.post h3 {
+      font: bold 19px/1.3 Georgia, serif;
+      margin: 1.3em 0 .4em;
+    }
+    article.post .lede {
+      font-weight: bold;
+    }
+    article.post code {
+      font: 14px/1.4 monospace;
+      background: #fffaf0;
+      padding: 0 3px;
+      border: 1px dotted #d2b48c;
+    }
+    article.post pre {
+      background: #000;
+      color: #0f0;
+      padding: 12px 14px;
+      overflow-x: auto;
+      font: 13px/1.5 monospace;
+      margin: 1em 0;
+      border: 1px solid;
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+    }
+    article.post pre code {
+      font: inherit;
+      background: none;
+      padding: 0;
+      border: 0;
+    }
+    article.post table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+    article.post th,
+    article.post td {
+      border-bottom: 1px solid #d2b48c;
+      padding: 6px;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: break-word;
+    }
+
+    /* Figures: a caption above its table, listing or image. */
+    article.post figure {
+      margin: 1em 0;
+    }
+    article.post figure pre {
+      margin: 0;
+    }
+    article.post figcaption {
+      margin: 0 0 .5em;
+    }
+    article.post figure img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Footer inside the article: rule, mailbox GIF, the way home. */
+    article.post footer {
+      text-align: center;
+      font-style: italic;
+      margin-top: 34px;
+    }
+    article.post footer hr {
+      width: 50%;
+      margin: 0 auto 18px;
+    }
+
+    /* Narrow screens: long code wraps, and a wide table scrolls in its own box. */
+    @media (max-width: 600px) {
+      article.post td code {
+        overflow-wrap: anywhere;
+      }
+      article.post table {
+        display: block;
+        overflow-x: auto;
+      }
+      article.post code {
+        overflow-wrap: break-word;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="sign" href="./index.html">
+      <span class="sign-inner">
+        <span class="sign-title">COM0 on the Web</span>
+        <span class="sign-tagline">l5yth, freelance engineer</span>
+      </span>
+    </a>
+    <nav class="buttons">
+      <a href="./index.html#about">About me</a>
+      <a href="./index.html#blog">Blog</a>
+      <a href="./index.html#contact">Contact</a>
+    </nav>
+  </header>
+
+  <article class="post">
+    <div class="label">Blog / 2026-11-16</div>
+    <h1>Craft apps: disabling the update check</h1>
+    <div class="tags">
+      <a href="./index.html#tag-linux">#linux</a>
+      <a href="./index.html#tag-arch-linux">#arch-linux</a>
+      <a href="./index.html#tag-rust">#rust</a>
+    </div>
+    <p>This article describes how the startup update check of the 13 Craft desktop apps is disabled. On the test system, the apps are installed from the Arch repositories only, while upstream publishes several releases per day. Therefore, every launch opened an "update available" prompt. The apps provide no setting for the check. The switch is a JSON file owned by the launcher.</p>
+    <h2>Scope</h2>
+    <figure>
+      <figcaption><strong>Table 1:</strong> One file silences the startup check in all 13 apps. PhotoCraft requires one additional preference, and ArtCraft has no check.</figcaption>
+      <table>
+        <thead>
+          <tr><th>App</th><th>Update check</th><th>Switch</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><a href="https://github.com/storytold/photocraft">PhotoCraft</a></td><td>Shared updater and a second check inside its engine</td><td><code>versions.json</code> and its own preference</td></tr>
+          <tr><td>FilmCraft, WordCraft, LightCraft, VectorCraft, PdfCraft, EffectCraft, DesignCraft, FigCraft, SoundCraft, DeckCraft, CADCraft, GridCraft</td><td>Shared updater, enabled unconditionally in <code>main.rs</code></td><td><code>versions.json</code> only</td></tr>
+          <tr><td><a href="https://github.com/storytold/artcraft">ArtCraft</a>, the Tauri generation app</td><td>None. It ships no updater plugin.</td><td>Not required</td></tr>
+        </tbody>
+      </table>
+    </figure>
+    <p>The behavior was verified against the releases of November 11, 2026 (v0.18.1 to v0.24.1) and against craft-libs <code>master</code> of November 15, 2026.</p>
+    <h2>Procedure</h2>
+    <ol>
+      <li>Create the directory and open the versions file (Listing 1). The path is <code>$XDG_DATA_HOME/ArtCraft/versions/versions.json</code>, by default <code>~/.local/share/ArtCraft/versions/versions.json</code>. <code>CRAFT_VERSIONS_FILE=/absolute/path</code> overrides it.</li>
+      <li>Add one entry per app (Listing 2). Any entry other than <code>"Stable"</code> disables the check.</li>
+      <li>Validate the file with <code>jq . ~/.local/share/ArtCraft/versions/versions.json</code>. Invalid JSON is read as an empty file, and every app follows stable again.</li>
+      <li>For PhotoCraft, turn off <em>Preferences &#8250; General &#8250; Automatically Check for Updates</em> in addition, or set the preference in <code>~/.config/photocraft/prefs.json</code> (Listing 3).</li>
+    </ol>
+    <figure>
+      <figcaption><strong>Listing 1:</strong> The directory is created and the file is opened in an editor.</figcaption>
+      <pre><code>mkdir -p ~/.local/share/ArtCraft/versions
+$EDITOR ~/.local/share/ArtCraft/versions/versions.json
+</code></pre>
+    </figure>
+    <figure>
+      <figcaption><strong>Listing 2:</strong> Each app receives an entry other than <code>"Stable"</code>.</figcaption>
+      <pre><code>{
+  "apps": {
+    "photocraft":  {"Pinned": "pacman"},
+    "vectorcraft": {"Pinned": "pacman"},
+    "filmcraft":   {"Pinned": "pacman"},
+    "lightcraft":  {"Pinned": "pacman"},
+    "pdfcraft":    {"Pinned": "pacman"},
+    "effectcraft": {"Pinned": "pacman"},
+    "designcraft": {"Pinned": "pacman"},
+    "figcraft":    {"Pinned": "pacman"},
+    "wordcraft":   {"Pinned": "pacman"},
+    "soundcraft":  {"Pinned": "pacman"},
+    "deckcraft":   {"Pinned": "pacman"},
+    "cadcraft":    {"Pinned": "pacman"},
+    "gridcraft":   {"Pinned": "pacman"}
+  }
+}
+</code></pre>
+    </figure>
+    <p>The pinned string is opaque to the apps, as only the launcher interprets it. <code>"Nightly"</code> has the same effect, as does an entry the app cannot parse.</p>
+    <figure>
+      <figcaption><strong>Listing 3:</strong> The PhotoCraft preference disables its second check. The directory of the file follows <code>$XDG_CONFIG_HOME/photocraft</code> or <code>PHOTOCRAFT_CONFIG_DIR</code>.</figcaption>
+      <pre><code>{"general": {"automaticallyCheckUpdates": false}}
+</code></pre>
+    </figure>
+    <p>The preference is read once at startup. <em>Help &#8250; Check for Updates</em> keeps working.</p>
+    <h2>Verification</h2>
+    <ul>
+      <li>With the file in place, each app logs one INFO line per start: <code>follows the launcher's choice (...); no update offered here</code>.</li>
+      <li>The manual check under <em>Help &#8250; Check for Updates</em> answers "up to date".</li>
+    </ul>
+    <h2>Mechanism</h2>
+    <p>All Craft desktop apps share one crate, <code>craft-update</code> in <a href="https://github.com/storytold/craft-libs">storytold/craft-libs</a>. It drives the startup check and <em>Help &#8250; Check for Updates</em>.</p>
+    <ol>
+      <li>On the first frame, the app calls <code>Updater::check_at_start</code>.</li>
+      <li>Before any network request, the app reads the launcher's version file (<code>crates/update/src/pins.rs</code>).</li>
+      <li>An entry other than <code>"Stable"</code> marks the app as managed by the launcher. The check ends with "nothing newer": no request is sent to GitHub and no prompt is shown.</li>
+      <li>Only the launcher writes the file. The apps read it, and pacman never sees it.</li>
+    </ol>
+    <p>PhotoCraft runs its update check inside its engine (<code>help.checkForUpdates</code>), not only through the shared updater. The versions file suppresses the dialog but not the request. The preference suppresses both.</p>
+    <h2>Limitations</h2>
+    <ul>
+      <li>The twelve other apps provide no preference, no flag, and no environment variable for the check. The file is the only switch.</li>
+      <li>EffectCraft skips the check only under <code>--control</code>, its automation mode.</li>
+    </ul>
+    <h2>Related: the "interface font fallback" log lines</h2>
+    <p>PdfCraft prints lines such as Listing 4 at every start. These lines do not report missing fonts.</p>
+    <figure>
+      <figcaption><strong>Listing 4:</strong> Each line names a fallback face that PdfCraft found and attached.</figcaption>
+      <pre><code>INFO [main] pdfcraft_ui_egui::platform::system_fonts: interface font fallback: /usr/share/fonts/noto/NotoSansDevanagari-Regular.ttf (face 0)
+</code></pre>
+    </figure>
+    <ul>
+      <li>The interface font is embedded: Inter, JetBrains Mono, the egui defaults, and the craft-fonts CJK, Arabic, and Thai faces.</li>
+      <li>At startup, the app probes a fixed list of installed files for six scripts that the embedded set lacks: Devanagari, Telugu, Sinhala, Tamil, Hebrew, and Hangul.</li>
+      <li>An attached face only draws characters that the embedded faces cannot draw, e.g., a file name in one of those scripts.</li>
+      <li>Korean is the one script that <code>noto-fonts</code> does not cover here. The probe matches NanumGothic, UnDotum, and Baekmuk <code>dotum.ttf</code> by file name; <code>noto-fonts-cjk</code> is not on the list. <code>pacman -S ttf-baekmuk</code> satisfies the probe.</li>
+      <li>To quiet the lines, set <code>RUST_LOG=warn</code>. The built-in filter is <code>warn,pdfcraft*=info</code>.</li>
+      <li>To skip the probing, set <code>PDFCRAFT_SYSTEM_FONTS=0</code>. This leaves those scripts undrawn.</li>
+    </ul>
+    <h2>References</h2>
+    <ul>
+      <li><a href="https://github.com/storytold/craft-libs">storytold/craft-libs</a>, <code>crates/update/src/pins.rs</code> and <code>updater.rs</code></li>
+      <li><a href="https://github.com/storytold/photocraft">storytold/photocraft</a>, <code>docs/control-protocol.md</code> and <code>apps/photocraft/src/app_dirs.rs</code></li>
+      <li><a href="https://github.com/storytold/pdfcraft">storytold/pdfcraft</a>, <code>crates/ui-egui/src/platform/system_fonts.rs</code> and <code>docs/development.md</code></li>
+      <li><a href="https://archlinux.org/packages/extra/any/noto-fonts/files/">Arch Linux: noto-fonts file list</a></li>
+    </ul>
+    <footer>
+      <hr>
+      <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes">
+      <div><a href="./index.html">Back to COM0 on the Web</a></div>
+    </footer>
+  </article>
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: 2026 l5yth
+SPDX-License-Identifier: Unlicense
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026-11 Home Assistant: naming untracked consumption per upstream device</title>
+  <meta name="description" content="This article describes how the untracked consumption of an upstream device receives its own name in the Home Assistant energy dashboard. Home Assistant provides no per-device name for this remainder. Therefore, the remainder is computed by a separate sensor and added as a device under the parent.">
+  <meta name="author" content="l5yth">
+  <meta name="keywords" content="home-assistant, energy">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Home Assistant: naming untracked consumption per upstream device">
+  <meta property="og:description" content="This article describes how the untracked consumption of an upstream device receives its own name in the Home Assistant energy dashboard. Home Assistant provides no per-device name for this remainder. Therefore, the remainder is computed by a separate sensor and added as a device under the parent.">
+  <meta property="article:published_time" content="2026-11-05">
+  <meta property="article:tag" content="home-assistant">
+  <meta property="article:tag" content="energy">
+  <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "BlogPosting", "headline": "Home Assistant: naming untracked consumption per upstream device", "description": "This article describes how the untracked consumption of an upstream device receives its own name in the Home Assistant energy dashboard. Home Assistant provides no per-device name for this remainder. Therefore, the remainder is computed by a separate sensor and added as a device under the parent.", "datePublished": "2026-11-05", "keywords": "home-assistant, energy", "author": { "@type": "Person", "name": "l5yth" } }</script>
+  <style>
+    body {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 16px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      background: #c2c09f url(./tile.png);
+      color: #111;
+      font: 18px/1.5 "Times New Roman", serif;
+    }
+    a:link {
+      color: #0000ee;
+    }
+    a:visited {
+      color: #551a8b;
+    }
+    a:hover {
+      color: #ff0000;
+    }
+
+    /* Masthead: the small sign links home, the buttons jump into it. */
+    header a.sign {
+      display: block;
+      text-decoration: none;
+      color: #efff02;
+      border: 6px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #efff02 0 6px, #000 6px 12px) border-box;
+      padding: 4px;
+    }
+    .sign-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 4px 16px;
+      border: 1px solid #efff02;
+      padding: 10px 14px;
+    }
+    .sign-title {
+      font: bold 22px/1.1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .sign-tagline {
+      font: bold 11px/1.4 Verdana, Geneva, sans-serif;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    nav.buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    nav.buttons a {
+      background: #d3d3d3;
+      color: #111;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      text-decoration: none;
+      padding: 8px 18px;
+      border: 1px solid;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    nav.buttons a:active {
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+      box-shadow: inset 1px 1px 0 #797a7a;
+    }
+
+    /* The article box, its hazard-striped label, title and tags. */
+    article.post {
+      position: relative;
+      background: #fdf5e6;
+      border: 3px double #8b4513;
+      padding: 36px 28px 24px;
+    }
+    .label {
+      position: absolute;
+      top: -15px;
+      left: 18px;
+      border: 3px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #f0e010 0 3px, #000 3px 6px) border-box;
+      color: #40a0f0;
+      text-shadow: 0 0 5px #40a0f0;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+    }
+    article.post h1 {
+      margin: 0 0 8px;
+      font: bold 34px/1.15 Georgia, serif;
+      text-wrap: balance;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 12px;
+      margin: 0 0 22px;
+    }
+    article.post .tags a {
+      font: 13px monospace;
+      color: #8b4513;
+      text-decoration: none;
+    }
+    article.post .tags a:hover {
+      text-decoration: underline;
+    }
+
+    /* The post body: its markup is unchanged, only these rules restyle it. */
+    article.post hr {
+      margin: 28px 0;
+    }
+    article.post h2 {
+      font: bold 24px/1.25 Georgia, serif;
+      margin: 1.5em 0 .5em;
+    }
+    article.post h3 {
+      font: bold 19px/1.3 Georgia, serif;
+      margin: 1.3em 0 .4em;
+    }
+    article.post .lede {
+      font-weight: bold;
+    }
+    article.post code {
+      font: 14px/1.4 monospace;
+      background: #fffaf0;
+      padding: 0 3px;
+      border: 1px dotted #d2b48c;
+    }
+    article.post pre {
+      background: #000;
+      color: #0f0;
+      padding: 12px 14px;
+      overflow-x: auto;
+      font: 13px/1.5 monospace;
+      margin: 1em 0;
+      border: 1px solid;
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+    }
+    article.post pre code {
+      font: inherit;
+      background: none;
+      padding: 0;
+      border: 0;
+    }
+    article.post table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+    article.post th,
+    article.post td {
+      border-bottom: 1px solid #d2b48c;
+      padding: 6px;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: break-word;
+    }
+
+    /* Figures: a caption above its table, listing or image. */
+    article.post figure {
+      margin: 1em 0;
+    }
+    article.post figure pre {
+      margin: 0;
+    }
+    article.post figcaption {
+      margin: 0 0 .5em;
+    }
+    article.post figure img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Footer inside the article: rule, mailbox GIF, the way home. */
+    article.post footer {
+      text-align: center;
+      font-style: italic;
+      margin-top: 34px;
+    }
+    article.post footer hr {
+      width: 50%;
+      margin: 0 auto 18px;
+    }
+
+    /* Narrow screens: long code wraps, and a wide table scrolls in its own box. */
+    @media (max-width: 600px) {
+      article.post td code {
+        overflow-wrap: anywhere;
+      }
+      article.post table {
+        display: block;
+        overflow-x: auto;
+      }
+      article.post code {
+        overflow-wrap: break-word;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="sign" href="./index.html">
+      <span class="sign-inner">
+        <span class="sign-title">COM0 on the Web</span>
+        <span class="sign-tagline">l5yth, freelance engineer</span>
+      </span>
+    </a>
+    <nav class="buttons">
+      <a href="./index.html#about">About me</a>
+      <a href="./index.html#blog">Blog</a>
+      <a href="./index.html#contact">Contact</a>
+    </nav>
+  </header>
+
+  <article class="post">
+    <div class="label">Blog / 2026-11-05</div>
+    <h1>Home Assistant: naming untracked consumption per upstream device</h1>
+    <div class="tags">
+      <a href="./index.html#tag-home-assistant">#home-assistant</a>
+      <a href="./index.html#tag-energy">#energy</a>
+    </div>
+    <p>This article describes how the untracked consumption of an upstream device receives its own name in the Home Assistant energy dashboard. Home Assistant provides no per-device name for this remainder. Therefore, the remainder is computed by a separate sensor and added as a device under the parent.</p>
+    <h2>Problem</h2>
+    <ul>
+      <li>The energy flow cards draw one gray node "Untracked consumption" (German: "Nicht erfasster Verbrauch") under every upstream device, plus one at home level.</li>
+      <li>All nodes carry the same label and the same gray. The chart does not show which parent a node belongs to.</li>
+      <li>The individual device graphs label the same remainder <code>&lt;Device&gt; (untracked)</code>.</li>
+    </ul>
+    <h2>Finding</h2>
+    <ul>
+      <li>The label is a fixed frontend string. Home Assistant has no per-device name for it.</li>
+      <li>Two pull requests (PRs), <a href="https://github.com/home-assistant/frontend/pull/55581">frontend PR #55581</a> and <a href="https://github.com/home-assistant/core/pull/190110">core PR #190110</a>, proposed an "Untracked consumption name" field. The frontend PR was closed unmerged on November 3, 2026. The core PR is closed as well.</li>
+      <li>The maintainer's answer was to give the remainder its own sensor and to add it as a device under the parent.</li>
+    </ul>
+    <h2>Procedure</h2>
+    <p>The example uses a metered plug (Network Hub) that feeds a miner (NerdQAxe), which reports its own power.</p>
+    <ol>
+      <li>Add a template sensor that subtracts the child power from the parent power, floored at zero (Listing 1).</li>
+      <li>Add an integral sensor that converts W to kWh with a left Riemann sum (Listing 1).</li>
+      <li>Restart Home Assistant.</li>
+      <li>Open Settings &#8594; Dashboards &#8594; Energy &#8594; Individual devices &#8594; Add device and enter the values of Table 1.</li>
+    </ol>
+    <figure>
+      <figcaption><strong>Listing 1:</strong> The template sensor computes the remainder in W. The integral sensor converts it to kWh.</figcaption>
+      <pre><code>template:
+  - sensor:
+      - name: network_hub_rest_power
+        unique_id: network_hub_rest_power
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        availability: "{{ has_value('sensor.plug_m3_network_hub_network_hub_power') }}"
+        state: &gt;
+          {{ [states('sensor.plug_m3_network_hub_network_hub_power') | float(0)
+              - states('sensor.nerdqaxe_power') | float(0), 0] | max | round(1) }}
+
+sensor:
+  - platform: integration
+    name: network_hub_rest_energy
+    unique_id: network_hub_rest_energy
+    source: sensor.network_hub_rest_power
+    unit_prefix: k
+    unit_time: h
+    method: left
+    round: 3
+    max_sub_interval:
+      minutes: 5
+</code></pre>
+    </figure>
+    <figure>
+      <figcaption><strong>Table 1:</strong> The remainder is added as an individual device with the following values.</figcaption>
+      <table>
+        <thead>
+          <tr><th>Field</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Energy sensor</td><td><code>sensor.network_hub_rest_energy</code></td></tr>
+          <tr><td>Power sensor</td><td><code>sensor.network_hub_rest_power</code></td></tr>
+          <tr><td>Display name</td><td>Network Hub Rest</td></tr>
+          <tr><td>Upstream device</td><td>Network Hub</td></tr>
+        </tbody>
+      </table>
+    </figure>
+    <p>The miner keeps Network Hub as its upstream device.</p>
+    <h2>Verification</h2>
+    <ul>
+      <li>The gray node under the parent drops to zero. The remainder appears under its own name in all energy cards.</li>
+      <li>The home-level "Untracked consumption" remains.</li>
+    </ul>
+    <h2>Limitations</h2>
+    <ul>
+      <li>There is no backfill. Days before the change stay gray.</li>
+      <li>An unavailable child counts as 0 W. Its load moves to the remainder.</li>
+      <li>The miner reports board-level power, whereas the plug measures at the wall. Therefore, the power supply loss lands in the remainder.</li>
+      <li>The integral and the plug counter differ slightly. A thin gray sliver can remain.</li>
+    </ul>
+    <h2>Alternative</h2>
+    <p>The <a href="https://github.com/MindFreeze/ha-sankey-chart">Sankey Chart card</a> from the Home Assistant Community Store (HACS) can be used on a custom dashboard. Its node type <code>remaining_parent_state</code> takes a free <code>name</code> per parent. However, the chart configuration must be maintained by hand.</p>
+    <h2>References</h2>
+    <ul>
+      <li><a href="https://github.com/home-assistant/frontend/pull/55581">home-assistant/frontend#55581</a>: Allow naming the untracked consumption of an upstream device</li>
+      <li><a href="https://github.com/home-assistant/core/pull/190110">home-assistant/core#190110</a>: Add untracked name to energy device consumption</li>
+      <li><a href="https://www.home-assistant.io/integrations/integration">Integral (Riemann sum)</a>, Home Assistant documentation</li>
+      <li><a href="https://github.com/MindFreeze/ha-sankey-chart">MindFreeze/ha-sankey-chart</a></li>
+    </ul>
+    <footer>
+      <hr>
+      <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes">
+      <div><a href="./index.html">Back to COM0 on the Web</a></div>
+    </footer>
+  </article>
+</body>
+</html>

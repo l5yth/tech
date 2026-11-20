@@ -186,6 +186,22 @@ SPDX-License-Identifier: Unlicense
       overflow-wrap: break-word;
     }
 
+    /* Figures: a caption above its table, listing or image. */
+    article.post figure {
+      margin: 1em 0;
+    }
+    article.post figure pre {
+      margin: 0;
+    }
+    article.post figcaption {
+      margin: 0 0 .5em;
+    }
+    article.post figure img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
     /* Footer inside the article: rule, mailbox GIF, the way home. */
     article.post footer {
       text-align: center;
@@ -197,10 +213,17 @@ SPDX-License-Identifier: Unlicense
       margin: 0 auto 18px;
     }
 
-    /* Narrow screens: long code in a table cell wraps instead of widening the page. */
+    /* Narrow screens: long code wraps, and a wide table scrolls in its own box. */
     @media (max-width: 600px) {
       article.post td code {
         overflow-wrap: anywhere;
+      }
+      article.post table {
+        display: block;
+        overflow-x: auto;
+      }
+      article.post code {
+        overflow-wrap: break-word;
       }
     }
   </style>

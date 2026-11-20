@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: 2026 l5yth
+SPDX-License-Identifier: Unlicense
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026-11 LEGO Concorde 10318 on a wall frame: mounting procedure</title>
+  <meta name="description" content="This article describes how the LEGO Concorde 10318 is mounted on a Mark's Magic wall display frame. The frame ships without written instructions. The plane is mounted nose up with one L-bracket under the keel end and one cable tie in the nose gear well.">
+  <meta name="author" content="l5yth">
+  <meta name="keywords" content="lego, diy">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="LEGO Concorde 10318 on a wall frame: mounting procedure">
+  <meta property="og:description" content="This article describes how the LEGO Concorde 10318 is mounted on a Mark's Magic wall display frame. The frame ships without written instructions. The plane is mounted nose up with one L-bracket under the keel end and one cable tie in the nose gear well.">
+  <meta property="article:published_time" content="2026-11-17">
+  <meta property="article:tag" content="lego">
+  <meta property="article:tag" content="diy">
+  <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "BlogPosting", "headline": "LEGO Concorde 10318 on a wall frame: mounting procedure", "description": "This article describes how the LEGO Concorde 10318 is mounted on a Mark's Magic wall display frame. The frame ships without written instructions. The plane is mounted nose up with one L-bracket under the keel end and one cable tie in the nose gear well.", "datePublished": "2026-11-17", "keywords": "lego, diy", "author": { "@type": "Person", "name": "l5yth" } }</script>
+  <style>
+    body {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 16px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      background: #c2c09f url(./tile.png);
+      color: #111;
+      font: 18px/1.5 "Times New Roman", serif;
+    }
+    a:link {
+      color: #0000ee;
+    }
+    a:visited {
+      color: #551a8b;
+    }
+    a:hover {
+      color: #ff0000;
+    }
+
+    /* Masthead: the small sign links home, the buttons jump into it. */
+    header a.sign {
+      display: block;
+      text-decoration: none;
+      color: #efff02;
+      border: 6px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #efff02 0 6px, #000 6px 12px) border-box;
+      padding: 4px;
+    }
+    .sign-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 4px 16px;
+      border: 1px solid #efff02;
+      padding: 10px 14px;
+    }
+    .sign-title {
+      font: bold 22px/1.1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .sign-tagline {
+      font: bold 11px/1.4 Verdana, Geneva, sans-serif;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    nav.buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    nav.buttons a {
+      background: #d3d3d3;
+      color: #111;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      text-decoration: none;
+      padding: 8px 18px;
+      border: 1px solid;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    nav.buttons a:active {
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+      box-shadow: inset 1px 1px 0 #797a7a;
+    }
+
+    /* The article box, its hazard-striped label, title and tags. */
+    article.post {
+      position: relative;
+      background: #fdf5e6;
+      border: 3px double #8b4513;
+      padding: 36px 28px 24px;
+    }
+    .label {
+      position: absolute;
+      top: -15px;
+      left: 18px;
+      border: 3px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #f0e010 0 3px, #000 3px 6px) border-box;
+      color: #40a0f0;
+      text-shadow: 0 0 5px #40a0f0;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+    }
+    article.post h1 {
+      margin: 0 0 8px;
+      font: bold 34px/1.15 Georgia, serif;
+      text-wrap: balance;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 12px;
+      margin: 0 0 22px;
+    }
+    article.post .tags a {
+      font: 13px monospace;
+      color: #8b4513;
+      text-decoration: none;
+    }
+    article.post .tags a:hover {
+      text-decoration: underline;
+    }
+
+    /* The post body: its markup is unchanged, only these rules restyle it. */
+    article.post hr {
+      margin: 28px 0;
+    }
+    article.post h2 {
+      font: bold 24px/1.25 Georgia, serif;
+      margin: 1.5em 0 .5em;
+    }
+    article.post h3 {
+      font: bold 19px/1.3 Georgia, serif;
+      margin: 1.3em 0 .4em;
+    }
+    article.post .lede {
+      font-weight: bold;
+    }
+    article.post code {
+      font: 14px/1.4 monospace;
+      background: #fffaf0;
+      padding: 0 3px;
+      border: 1px dotted #d2b48c;
+    }
+    article.post pre {
+      background: #000;
+      color: #0f0;
+      padding: 12px 14px;
+      overflow-x: auto;
+      font: 13px/1.5 monospace;
+      margin: 1em 0;
+      border: 1px solid;
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+    }
+    article.post pre code {
+      font: inherit;
+      background: none;
+      padding: 0;
+      border: 0;
+    }
+    article.post table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+    article.post th,
+    article.post td {
+      border-bottom: 1px solid #d2b48c;
+      padding: 6px;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: break-word;
+    }
+
+    /* Figures: a caption above its table, listing or image. */
+    article.post figure {
+      margin: 1em 0;
+    }
+    article.post figure pre {
+      margin: 0;
+    }
+    article.post figcaption {
+      margin: 0 0 .5em;
+    }
+    article.post figure img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Footer inside the article: rule, mailbox GIF, the way home. */
+    article.post footer {
+      text-align: center;
+      font-style: italic;
+      margin-top: 34px;
+    }
+    article.post footer hr {
+      width: 50%;
+      margin: 0 auto 18px;
+    }
+
+    /* Narrow screens: long code wraps, and a wide table scrolls in its own box. */
+    @media (max-width: 600px) {
+      article.post td code {
+        overflow-wrap: anywhere;
+      }
+      article.post table {
+        display: block;
+        overflow-x: auto;
+      }
+      article.post code {
+        overflow-wrap: break-word;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="sign" href="./index.html">
+      <span class="sign-inner">
+        <span class="sign-title">COM0 on the Web</span>
+        <span class="sign-tagline">l5yth, freelance engineer</span>
+      </span>
+    </a>
+    <nav class="buttons">
+      <a href="./index.html#about">About me</a>
+      <a href="./index.html#blog">Blog</a>
+      <a href="./index.html#contact">Contact</a>
+    </nav>
+  </header>
+
+  <article class="post">
+    <div class="label">Blog / 2026-11-17</div>
+    <h1>LEGO Concorde 10318 on a wall frame: mounting procedure</h1>
+    <div class="tags">
+      <a href="./index.html#tag-lego">#lego</a>
+      <a href="./index.html#tag-diy">#diy</a>
+    </div>
+    <p>This article describes how the LEGO Concorde 10318 is mounted on a Mark's Magic wall display frame. The frame ships without written instructions. The plane is mounted nose up with one L-bracket under the keel end and one cable tie in the nose gear well.</p>
+    <h2>Frame</h2>
+    <figure>
+      <figcaption><strong>Table 1:</strong> The frame is identified by its size and artwork, as no label was found.</figcaption>
+      <table>
+        <thead>
+          <tr><th>Property</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Brand</td><td>Mark's Magic, design line "Mark's Magic x St&#233;phane Beilliard", sold through <a href="https://elevenmark.com/products/mark-s-magic-x-stephane-beilliard-wall-display-frames-for-lego%c2%ae-icons-concorde-10318">elevenmark.com</a></td></tr>
+          <tr><td>Seller of record</td><td>MARKSMAGIC LLC, Sheridan, Wyoming, USA. The factory is not named.</td></tr>
+          <tr><td>Size</td><td>54 &#215; 113 cm</td></tr>
+          <tr><td>Weight</td><td>5 kg (maker's figure)</td></tr>
+          <tr><td>Build</td><td>Black aluminum profile, glossy printed acrylic panel</td></tr>
+          <tr><td>Artwork</td><td>"CONCORDE / AIR FRANCE" across the top, red delta with its tip 5 cm below the top edge</td></tr>
+          <tr><td>Fixing points</td><td>Three brass-sleeved holes on the vertical centerline</td></tr>
+          <tr><td>Instructions</td><td>None in the box. The maker publishes <a href="https://elevenmark.com/blogs/marks-magic/ultimate-instructions-for-your-display">video links only</a>.</td></tr>
+        </tbody>
+      </table>
+    </figure>
+    <p>The identification can be confirmed by the maker's hidden anti-counterfeit label or by the seller name on the order.</p>
+    <h2>Kit</h2>
+    <figure>
+      <figcaption><strong>Table 2:</strong> The kit contains the following parts. The sizes are approximate.</figcaption>
+      <table>
+        <thead>
+          <tr><th>Quantity</th><th>Part</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>Steel L-bracket, 12 mm wide, legs 20 to 25 mm, one hole</td></tr>
+          <tr><td>2</td><td>Machine screws, M4 &#215; 15, one with nut</td></tr>
+          <tr><td>1</td><td>White cable tie, 15 to 20 cm</td></tr>
+          <tr><td>4</td><td>Wall plugs, 6 &#215; 30 mm, with 4 wood screws, 4 &#215; 40 mm</td></tr>
+          <tr><td>4</td><td>Steel nails with red collars</td></tr>
+        </tbody>
+      </table>
+    </figure>
+    <p>The kit includes no tools. The following tools are required: (1) a screwdriver, (2) pliers, (3) a side cutter, and (4) a drill with a 6 mm bit for the wall plugs.</p>
+    <h2>Measurements</h2>
+    <p>The plane is mounted nose up, with the nose tip on the tip of the red delta. The hole positions are accurate to &#177; 1 cm. The plane stations were read with a folding rule from the tail tip.</p>
+    <figure>
+      <figcaption><strong>Figure 1:</strong> Hole map of the three frame holes against the nose gear well and the bracket tab, front view, to scale 1:15.</figcaption>
+      <img src="./2026-11-lego-concorde-hole-map.png" alt="Front view of the frame with the plane mounted nose up. Upper holes 1 and 2, at 27.3 and 29.8 cm below the top edge, meet the nose gear well; the lower hole, at 81.3 cm, meets the bracket tab at the end of the flat keel. Scale 1:15.">
+    </figure>
+    <figure>
+      <figcaption><strong>Table 3:</strong> Each frame hole meets one feature on the belly of the plane.</figcaption>
+      <table>
+        <thead>
+          <tr><th>Hole</th><th>Frame position (cm below top edge)</th><th>Plane station (cm from tail tip)</th><th>Feature behind it</th><th>Hardware</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Upper pair</td><td>27.3 and 29.8</td><td>80 to 83</td><td>Nose gear well</td><td>Cable tie</td></tr>
+          <tr><td>Lower</td><td>81.3</td><td>28 to 29</td><td>End of the flat keel</td><td>L-bracket</td></tr>
+        </tbody>
+      </table>
+    </figure>
+    <p>The stand socket (45 to 47 cm) and the tail bumper wheel (15 to 17 cm) are not used, as no hole reaches them. The engine nacelles rest on the panel, and the fuselage stands approximately 1.5 cm clear of it. The bracket tab bridges that gap.</p>
+    <h2>Mounting procedure</h2>
+    <ol>
+      <li>Prepare the plane: retract the landing gear, stow the tail bumper, and set the nose straight.</li>
+      <li>Pass a machine screw through the L-bracket and the lower hole, and secure it with the nut behind the board. The tab must sit at the bottom and point outward.</li>
+      <li>Lay the frame flat. Place the plane belly down, with the nose toward the lettering.</li>
+      <li>Slide the plane toward the bottom edge until the tab drops into the groove where the last flat keel tile ends, 27.5 cm from the tail tip.</li>
+      <li>Feed the cable tie from behind through one upper hole, around the retracted nose gear leg, and back through the other upper hole. Close it behind the board, snug but not tight, and cut off its excess end.</li>
+      <li>Stand the frame against a wall and press the plane down by hand. Nothing may move.</li>
+      <li>Hang the frame. On masonry, use the wall plugs and wood screws. Alternatively, use the steel nails.</li>
+    </ol>
+    <h2>Verification</h2>
+    <ul>
+      <li>The nose tip sits on the tip of the red delta, 5 cm below the top edge. The tail tip sits 3 cm above the bottom edge.</li>
+      <li>Both upper holes open into the nose gear well. If the upper hole misses the well, turn the bracket over so that the tab sits above the screw. The plane then sits 3 cm higher.</li>
+    </ul>
+    <h2>Limitations</h2>
+    <ul>
+      <li>The groove is approximately 2 mm deep. The cable tie keeps the tab engaged.</li>
+      <li>The tail cone must not be turned while the plane is mounted, as it drives the landing gear against the cable tie (<a href="https://brickset.com/article/98631/review-10318-concorde">Brickset review</a>).</li>
+      <li>The load on the wall is approximately 7 kg: 5 kg for the frame and 2 kg for the plane.</li>
+      <li>The bracket seat and the tie route are derived from measurements and photos, not from the maker's video. A <a href="https://www.icuanuty.com/blogs/news/lego-concorde-10318-wall-mount-display-frame-guide">mounting guide by ICUANUTY</a> shows the same tie route on a comparable frame.</li>
+    </ul>
+    <h2>References</h2>
+    <ul>
+      <li><a href="https://elevenmark.com/products/mark-s-magic-x-stephane-beilliard-wall-display-frames-for-lego%c2%ae-icons-concorde-10318">Mark's Magic x St&#233;phane Beilliard frame, product page</a>: size, weight</li>
+      <li><a href="https://elevenmark.com/blogs/marks-magic/ultimate-instructions-for-your-display">Mark's Magic instruction index</a>: video links only</li>
+      <li><a href="https://www.icuanuty.com/blogs/news/lego-concorde-10318-wall-mount-display-frame-guide">ICUANUTY mounting guide</a>: same tie route on a comparable frame</li>
+      <li><a href="https://brickset.com/article/98631/review-10318-concorde">Brickset review of 10318</a>: landing gear driven by the tail cone</li>
+    </ul>
+    <footer>
+      <hr>
+      <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes">
+      <div><a href="./index.html">Back to COM0 on the Web</a></div>
+    </footer>
+  </article>
+</body>
+</html>

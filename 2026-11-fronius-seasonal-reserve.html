@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<!--
+SPDX-FileCopyrightText: 2026 l5yth
+SPDX-License-Identifier: Unlicense
+-->
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026-11 Seasonal battery reserve on a Fronius GEN24 with Home Assistant</title>
+  <meta name="description" content="This article describes a Home Assistant automation that sets the minimum battery reserve of a Fronius GEN24 inverter by month. The method uses local Modbus TCP and the core Fronius integration. It requires neither a cloud service nor a custom integration.">
+  <meta name="author" content="l5yth">
+  <meta name="keywords" content="home-assistant, fronius, solar">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Seasonal battery reserve on a Fronius GEN24 with Home Assistant">
+  <meta property="og:description" content="This article describes a Home Assistant automation that sets the minimum battery reserve of a Fronius GEN24 inverter by month. The method uses local Modbus TCP and the core Fronius integration. It requires neither a cloud service nor a custom integration.">
+  <meta property="article:published_time" content="2026-11-19">
+  <meta property="article:tag" content="home-assistant">
+  <meta property="article:tag" content="fronius">
+  <meta property="article:tag" content="solar">
+  <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "BlogPosting", "headline": "Seasonal battery reserve on a Fronius GEN24 with Home Assistant", "description": "This article describes a Home Assistant automation that sets the minimum battery reserve of a Fronius GEN24 inverter by month. The method uses local Modbus TCP and the core Fronius integration. It requires neither a cloud service nor a custom integration.", "datePublished": "2026-11-19", "keywords": "home-assistant, fronius, solar", "author": { "@type": "Person", "name": "l5yth" } }</script>
+  <style>
+    body {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 28px 16px 44px;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+      background: #c2c09f url(./tile.png);
+      color: #111;
+      font: 18px/1.5 "Times New Roman", serif;
+    }
+    a:link {
+      color: #0000ee;
+    }
+    a:visited {
+      color: #551a8b;
+    }
+    a:hover {
+      color: #ff0000;
+    }
+
+    /* Masthead: the small sign links home, the buttons jump into it. */
+    header a.sign {
+      display: block;
+      text-decoration: none;
+      color: #efff02;
+      border: 6px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #efff02 0 6px, #000 6px 12px) border-box;
+      padding: 4px;
+    }
+    .sign-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 4px 16px;
+      border: 1px solid #efff02;
+      padding: 10px 14px;
+    }
+    .sign-title {
+      font: bold 22px/1.1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .sign-tagline {
+      font: bold 11px/1.4 Verdana, Geneva, sans-serif;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    nav.buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    nav.buttons a {
+      background: #d3d3d3;
+      color: #111;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      text-decoration: none;
+      padding: 8px 18px;
+      border: 1px solid;
+      border-color: #f5f5f4 #2e2b29 #2e2b29 #f5f5f4;
+      box-shadow: inset -1px -1px 0 #797a7a;
+    }
+    nav.buttons a:active {
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+      box-shadow: inset 1px 1px 0 #797a7a;
+    }
+
+    /* The article box, its hazard-striped label, title and tags. */
+    article.post {
+      position: relative;
+      background: #fdf5e6;
+      border: 3px double #8b4513;
+      padding: 36px 28px 24px;
+    }
+    .label {
+      position: absolute;
+      top: -15px;
+      left: 18px;
+      border: 3px solid transparent;
+      background:
+        linear-gradient(#000, #000) padding-box,
+        repeating-linear-gradient(-45deg, #f0e010 0 3px, #000 3px 6px) border-box;
+      color: #40a0f0;
+      text-shadow: 0 0 5px #40a0f0;
+      font: bold 12px/1 Verdana, Geneva, sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+    }
+    article.post h1 {
+      margin: 0 0 8px;
+      font: bold 34px/1.15 Georgia, serif;
+      text-wrap: balance;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 12px;
+      margin: 0 0 22px;
+    }
+    article.post .tags a {
+      font: 13px monospace;
+      color: #8b4513;
+      text-decoration: none;
+    }
+    article.post .tags a:hover {
+      text-decoration: underline;
+    }
+
+    /* The post body: its markup is unchanged, only these rules restyle it. */
+    article.post hr {
+      margin: 28px 0;
+    }
+    article.post h2 {
+      font: bold 24px/1.25 Georgia, serif;
+      margin: 1.5em 0 .5em;
+    }
+    article.post h3 {
+      font: bold 19px/1.3 Georgia, serif;
+      margin: 1.3em 0 .4em;
+    }
+    article.post .lede {
+      font-weight: bold;
+    }
+    article.post code {
+      font: 14px/1.4 monospace;
+      background: #fffaf0;
+      padding: 0 3px;
+      border: 1px dotted #d2b48c;
+    }
+    article.post pre {
+      background: #000;
+      color: #0f0;
+      padding: 12px 14px;
+      overflow-x: auto;
+      font: 13px/1.5 monospace;
+      margin: 1em 0;
+      border: 1px solid;
+      border-color: #2e2b29 #f5f5f4 #f5f5f4 #2e2b29;
+    }
+    article.post pre code {
+      font: inherit;
+      background: none;
+      padding: 0;
+      border: 0;
+    }
+    article.post table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+    article.post th,
+    article.post td {
+      border-bottom: 1px solid #d2b48c;
+      padding: 6px;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: break-word;
+    }
+
+    /* Figures: a caption above its table, listing or image. */
+    article.post figure {
+      margin: 1em 0;
+    }
+    article.post figure pre {
+      margin: 0;
+    }
+    article.post figcaption {
+      margin: 0 0 .5em;
+    }
+    article.post figure img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Footer inside the article: rule, mailbox GIF, the way home. */
+    article.post footer {
+      text-align: center;
+      font-style: italic;
+      margin-top: 34px;
+    }
+    article.post footer hr {
+      width: 50%;
+      margin: 0 auto 18px;
+    }
+
+    /* Narrow screens: long code wraps, and a wide table scrolls in its own box. */
+    @media (max-width: 600px) {
+      article.post td code {
+        overflow-wrap: anywhere;
+      }
+      article.post table {
+        display: block;
+        overflow-x: auto;
+      }
+      article.post code {
+        overflow-wrap: break-word;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="sign" href="./index.html">
+      <span class="sign-inner">
+        <span class="sign-title">COM0 on the Web</span>
+        <span class="sign-tagline">l5yth, freelance engineer</span>
+      </span>
+    </a>
+    <nav class="buttons">
+      <a href="./index.html#about">About me</a>
+      <a href="./index.html#blog">Blog</a>
+      <a href="./index.html#contact">Contact</a>
+    </nav>
+  </header>
+
+  <article class="post">
+    <div class="label">Blog / 2026-11-19</div>
+    <h1>Seasonal battery reserve on a Fronius GEN24 with Home Assistant</h1>
+    <div class="tags">
+      <a href="./index.html#tag-home-assistant">#home-assistant</a>
+      <a href="./index.html#tag-fronius">#fronius</a>
+      <a href="./index.html#tag-solar">#solar</a>
+    </div>
+    <p>This article describes a Home Assistant automation that sets the minimum battery reserve of a Fronius GEN24 inverter by month. The method uses local Modbus TCP and the core Fronius integration. It requires neither a cloud service nor a custom integration.</p>
+    <h2>Test system</h2>
+    <figure>
+      <figcaption><strong>Table 1:</strong> The method was set up on the following system.</figcaption>
+      <table>
+        <thead>
+          <tr><th>Component</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Inverter</td><td>Fronius Symo GEN24 6.0 Plus</td></tr>
+          <tr><td>Battery</td><td>BYD HVS+, 12.4 kWh</td></tr>
+          <tr><td>Software</td><td>Home Assistant with the core Fronius integration, no custom integration</td></tr>
+          <tr><td>Previous reserve</td><td>7%, fixed</td></tr>
+        </tbody>
+      </table>
+    </figure>
+    <h2>Schedule</h2>
+    <figure>
+      <figcaption><strong>Table 2:</strong> The minimum reserve follows the month.</figcaption>
+      <table>
+        <thead>
+          <tr><th>Months</th><th>Minimum reserve (%)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>June, July</td><td>10</td></tr>
+          <tr><td>May, August</td><td>20</td></tr>
+          <tr><td>April, September</td><td>30</td></tr>
+          <tr><td>March, October</td><td>40</td></tr>
+          <tr><td>February, November</td><td>50</td></tr>
+          <tr><td>December, January</td><td>60</td></tr>
+        </tbody>
+      </table>
+    </figure>
+    <h2>Procedure</h2>
+    <ol>
+      <li>In the inverter UI under Communication &gt; Modbus, switch on the Modbus TCP server and "Inverter control via Modbus". Without the second switch, Home Assistant creates no control entities.</li>
+      <li>Restart Home Assistant. Reloading the integration was not sufficient on the test system.</li>
+      <li>Open the inverter device in Home Assistant. The number entity "Battery minimum reserve" is listed under Configuration, with a range of 0 to 100% and a step of 1.</li>
+      <li>Add the automation (Listing 1).</li>
+    </ol>
+    <figure>
+      <figcaption><strong>Listing 1:</strong> The automation has two triggers: daily at 13:08 and on every change of the backup mode.</figcaption>
+      <pre><code>alias: Seasonal battery reserve
+triggers:
+  - trigger: time
+    at: "13:08:00"
+  - trigger: state
+    entity_id: binary_sensor.garage_fronius_solarnet_backup_mode
+    to:
+      - "on"
+      - "off"
+actions:
+  - action: number.set_value
+    target:
+      entity_id: number.garage_fronius_gen24_battery_minimum_reserve
+    data:
+      value: &gt;
+        {{ 7 if is_state('binary_sensor.garage_fronius_solarnet_backup_mode', 'on')
+           else {1: 60, 2: 50, 3: 40, 4: 30, 5: 20, 6: 10,
+                 7: 10, 8: 20, 9: 30, 10: 40, 11: 50, 12: 60}[now().month] }}
+</code></pre>
+    </figure>
+    <p>The automation behaves as follows:</p>
+    <ul>
+      <li>With the grid available, the reserve of the current month is set.</li>
+      <li>With the backup mode on, the reserve is set to 7%.</li>
+      <li>A missed day is corrected by the next run.</li>
+    </ul>
+    <h2>Verification</h2>
+    <ul>
+      <li>The first read of the entity returned 7.0, identical to the value set in the inverter UI.</li>
+      <li>The automation is in operation. The reserve was at 50% as of November 14, 2026.</li>
+    </ul>
+    <h2>Documented behavior</h2>
+    <p>The following behavior is documented but was not tested on the test system.</p>
+    <ul>
+      <li>With the grid available, the battery does not discharge below the reserve (<a href="https://manuals.fronius.com/html/4204260315">Fronius</a>).</li>
+      <li>With the State of Charge (SOC) below the reserve, the battery recharges from the grid. The reported rate is 0.5 kW (<a href="https://github.com/redpomodoro/fronius_modbus">fronius_modbus</a>). Therefore, every step up of the schedule can trigger that recharge.</li>
+      <li>In backup mode, the reserve and manually set SOC limits do not apply. The battery discharges to the minimum preset by its manufacturer (<a href="https://manuals.fronius.com/html/4204260315">Fronius</a>). Thus, the backup trigger in the automation is a safeguard, not a requirement.</li>
+      <li>The value stays on the inverter while Home Assistant is down and after the integration is removed (<a href="https://www.home-assistant.io/integrations/fronius/">Home Assistant</a>).</li>
+    </ul>
+    <h2>Open questions</h2>
+    <ul>
+      <li>It is open which field of the inverter UI shows the written value: "SoC Minimum" or "Reserve Capacity".</li>
+      <li>A backup test with the SOC below the reserve is pending.</li>
+    </ul>
+    <h2>References</h2>
+    <ul>
+      <li><a href="https://www.home-assistant.io/integrations/fronius/">Home Assistant: Fronius integration</a>: Modbus prerequisites, control entities, persistence</li>
+      <li><a href="https://manuals.fronius.com/html/4204260315">Fronius Symo GEN24 6 - 10 kW Plus, operating instructions</a>: reserve capacity, backup power</li>
+      <li><a href="https://manuals.fronius.com/html/4204102649/en-US.html">Fronius GEN24 Modbus TCP and RTU</a>: register MinRsvPct, storage model 124</li>
+      <li><a href="https://github.com/redpomodoro/fronius_modbus">redpomodoro/fronius_modbus</a>: grid recharge at 0.5 kW below the reserve</li>
+    </ul>
+    <footer>
+      <hr>
+      <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes">
+      <div><a href="./index.html">Back to COM0 on the Web</a></div>
+    </footer>
+  </article>
+</body>
+</html>
