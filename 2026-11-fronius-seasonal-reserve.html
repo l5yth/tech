@@ -280,12 +280,10 @@ SPDX-License-Identifier: Unlicense
           <tr><th>Months</th><th>Minimum reserve (%)</th></tr>
         </thead>
         <tbody>
-          <tr><td>June, July</td><td>10</td></tr>
-          <tr><td>May, August</td><td>20</td></tr>
-          <tr><td>April, September</td><td>30</td></tr>
-          <tr><td>March, October</td><td>40</td></tr>
-          <tr><td>February, November</td><td>50</td></tr>
-          <tr><td>December, January</td><td>60</td></tr>
+          <tr><td>April, May, June, July, August</td><td>10</td></tr>
+          <tr><td>March, September</td><td>20</td></tr>
+          <tr><td>February, October</td><td>50</td></tr>
+          <tr><td>November, December, January</td><td>80</td></tr>
         </tbody>
       </table>
     </figure>
@@ -314,40 +312,37 @@ actions:
     data:
       value: &gt;
         {{ 7 if is_state('binary_sensor.garage_fronius_solarnet_backup_mode', 'on')
-           else {1: 60, 2: 50, 3: 40, 4: 30, 5: 20, 6: 10,
-                 7: 10, 8: 20, 9: 30, 10: 40, 11: 50, 12: 60}[now().month] }}
+           else {1: 80, 2: 50, 3: 20, 4: 10, 5: 10, 6: 10,
+                 7: 10, 8: 10, 9: 20, 10: 50, 11: 80, 12: 80}[now().month] }}
 </code></pre>
     </figure>
     <p>The automation behaves as follows:</p>
     <ul>
       <li>With the grid available, the reserve of the current month is set.</li>
-      <li>With the backup mode on, the reserve is set to 7%.</li>
+      <li>With the backup mode on, the reserve is set to 7% (recommended battery minimum).</li>
       <li>A missed day is corrected by the next run.</li>
     </ul>
+    <p>13:08 is my local solar maximum in summer. In winter it is off by one hour but that does not matter much in the low season.</p>
     <h2>Verification</h2>
     <ul>
       <li>The first read of the entity returned 7.0, identical to the value set in the inverter UI.</li>
-      <li>The automation is in operation. The reserve was at 50% as of November 14, 2026.</li>
+      <li>The automation is in operation. The reserve was at 80% as of November 14, 2026.</li>
+    </ul>
+    <h2>Confirmed behavior</h2>
+    <p>The following behavior was confirmed on the test system.</p>
+    <ul>
+      <li>With the grid available, the battery does not discharge below the reserve (<a href="https://manuals.fronius.com/html/4204260315">Fronius</a>).</li>
+      <li>With the State of Charge (SOC) below the reserve, the battery recharges from the grid (unless solar power is available). The reported rate is 0.5 kW (<a href="https://github.com/redpomodoro/fronius_modbus">fronius_modbus</a>). Every step up of the schedule can trigger that recharge, especially in fall and winter.</li>
     </ul>
     <h2>Documented behavior</h2>
     <p>The following behavior is documented but was not tested on the test system.</p>
     <ul>
-      <li>With the grid available, the battery does not discharge below the reserve (<a href="https://manuals.fronius.com/html/4204260315">Fronius</a>).</li>
-      <li>With the State of Charge (SOC) below the reserve, the battery recharges from the grid. The reported rate is 0.5 kW (<a href="https://github.com/redpomodoro/fronius_modbus">fronius_modbus</a>). Therefore, every step up of the schedule can trigger that recharge.</li>
       <li>In backup mode, the reserve and manually set SOC limits do not apply. The battery discharges to the minimum preset by its manufacturer (<a href="https://manuals.fronius.com/html/4204260315">Fronius</a>). Thus, the backup trigger in the automation is a safeguard, not a requirement.</li>
-      <li>The value stays on the inverter while Home Assistant is down and after the integration is removed (<a href="https://www.home-assistant.io/integrations/fronius/">Home Assistant</a>).</li>
     </ul>
     <h2>Open questions</h2>
     <ul>
       <li>It is open which field of the inverter UI shows the written value: "SoC Minimum" or "Reserve Capacity".</li>
       <li>A backup test with the SOC below the reserve is pending.</li>
-    </ul>
-    <h2>References</h2>
-    <ul>
-      <li><a href="https://www.home-assistant.io/integrations/fronius/">Home Assistant: Fronius integration</a>: Modbus prerequisites, control entities, persistence</li>
-      <li><a href="https://manuals.fronius.com/html/4204260315">Fronius Symo GEN24 6 - 10 kW Plus, operating instructions</a>: reserve capacity, backup power</li>
-      <li><a href="https://manuals.fronius.com/html/4204102649/en-US.html">Fronius GEN24 Modbus TCP and RTU</a>: register MinRsvPct, storage model 124</li>
-      <li><a href="https://github.com/redpomodoro/fronius_modbus">redpomodoro/fronius_modbus</a>: grid recharge at 0.5 kW below the reserve</li>
     </ul>
     <footer>
       <hr>
