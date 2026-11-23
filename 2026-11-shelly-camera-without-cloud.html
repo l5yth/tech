@@ -7,18 +7,18 @@ SPDX-License-Identifier: Unlicense
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>2026-11 Shelly Camera without cloud</title>
-  <meta name="description" content="This article describes how a Shelly Camera is operated without the Shelly cloud. A cloud-free Shelly camera app does not exist. However, the camera runs locally through its Web UI, the Real Time Streaming Protocol (RTSP), WebRTC, a Network File System (NFS) share, and MQTT.">
+  <title>2026-11 Shelly Camera as baby monitor without cloud</title>
+  <meta name="description" content="This article describes how a Shelly Camera is operated without the Shelly cloud for baby monitoring. A cloud-free Shelly camera app does not exist. However, the camera runs locally through its Web UI, the Real Time Streaming Protocol (RTSP), WebRTC, a Network File System (NFS) share, and MQTT.">
   <meta name="author" content="l5yth">
   <meta name="keywords" content="shelly, home-assistant, self-hosting">
   <meta property="og:type" content="article">
-  <meta property="og:title" content="Shelly Camera without cloud">
-  <meta property="og:description" content="This article describes how a Shelly Camera is operated without the Shelly cloud. A cloud-free Shelly camera app does not exist. However, the camera runs locally through its Web UI, the Real Time Streaming Protocol (RTSP), WebRTC, a Network File System (NFS) share, and MQTT.">
+  <meta property="og:title" content="Shelly Camera as baby monitor without cloud">
+  <meta property="og:description" content="This article describes how a Shelly Camera is operated without the Shelly cloud for baby monitoring. A cloud-free Shelly camera app does not exist. However, the camera runs locally through its Web UI, the Real Time Streaming Protocol (RTSP), WebRTC, a Network File System (NFS) share, and MQTT.">
   <meta property="article:published_time" content="2026-11-13">
   <meta property="article:tag" content="shelly">
   <meta property="article:tag" content="home-assistant">
   <meta property="article:tag" content="self-hosting">
-  <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "BlogPosting", "headline": "Shelly Camera without cloud", "description": "This article describes how a Shelly Camera is operated without the Shelly cloud. A cloud-free Shelly camera app does not exist. However, the camera runs locally through its Web UI, the Real Time Streaming Protocol (RTSP), WebRTC, a Network File System (NFS) share, and MQTT.", "datePublished": "2026-11-13", "keywords": "shelly, home-assistant, self-hosting", "author": { "@type": "Person", "name": "l5yth" } }</script>
+  <script type="application/ld+json">{ "@context": "https://schema.org", "@type": "BlogPosting", "headline": "Shelly Camera as baby monitor without cloud", "description": "This article describes how a Shelly Camera is operated without the Shelly cloud for baby monitoring. A cloud-free Shelly camera app does not exist. However, the camera runs locally through its Web UI, the Real Time Streaming Protocol (RTSP), WebRTC, a Network File System (NFS) share, and MQTT.", "datePublished": "2026-11-13", "keywords": "shelly, home-assistant, self-hosting", "author": { "@type": "Person", "name": "l5yth" } }</script>
   <style>
     body {
       max-width: 720px;
@@ -250,13 +250,13 @@ SPDX-License-Identifier: Unlicense
 
   <article class="post">
     <div class="label">Blog / 2026-11-13</div>
-    <h1>Shelly Camera without cloud</h1>
+    <h1>Shelly Camera as baby monitor without cloud</h1>
     <div class="tags">
       <a href="./blog.html#tag-shelly">#shelly</a>
       <a href="./blog.html#tag-home-assistant">#home-assistant</a>
       <a href="./blog.html#tag-self-hosting">#self-hosting</a>
     </div>
-    <p>This article describes how a Shelly Camera is operated without the Shelly cloud. A cloud-free Shelly camera app does not exist. However, the camera runs locally through its Web UI, the Real Time Streaming Protocol (RTSP), WebRTC, a Network File System (NFS) share, and MQTT.</p>
+    <p>This article describes how a Shelly Camera is operated without the Shelly cloud for baby monitoring. A cloud-free Shelly camera app does not exist. However, the camera runs locally through its Web UI, the Real Time Streaming Protocol (RTSP), WebRTC, a Network File System (NFS) share, and MQTT.</p>
     <h2>Apps</h2>
     <figure>
       <figcaption><strong>Table 1:</strong> None of the available apps provides video without the cloud. The device Web UI does.</figcaption>
@@ -324,17 +324,6 @@ SPDX-License-Identifier: Unlicense
       <li>The stream must be added manually as a generic camera with the RTSP URL (<a href="https://techtest.org/shelly-camera-im-test-guenstige-ueberwachungskamera-aus-europa-ohne-cloud-zwang-mit-rtsp-mqtt/">techtest.org</a>).</li>
       <li>A camera entity without a picture indicates this gap, not a broken installation.</li>
       <li>go2rtc standalone or an NVR removes Home Assistant from the video path entirely.</li>
-    </ul>
-    <h2>References</h2>
-    <ul>
-      <li><a href="https://shelly-api-docs.shelly.cloud/gen2/Devices/Gen3/ShellyCamera/">Shelly Camera API documentation</a>: streams, RTSP, WHEP, SD card and NFS storage</li>
-      <li><a href="https://www.shelly.com/blogs/documentation/shelly-camera-smart-control">Shelly Camera Smart Control</a>: app functions, subscription gates, RTSP warnings</li>
-      <li><a href="https://www.shelly.com/it/blogs/documentazione/shelly-camera-web-interface">Shelly Camera Web Interface</a>: local Web UI without cloud, stream 0 and 1</li>
-      <li><a href="https://www.shelly.com/products/shelly-camera">Shelly Camera product page</a>: RTSP, WebRTC, MQTT, Frigate and Home Assistant compatibility, subscription prices</li>
-      <li><a href="https://www.shelly.com/blogs/documentation/do-i-need-internet-cloud-access-to-use-shelly-smart-control-application-1">Do I need internet/cloud access to use Shelly Smart Control</a>: local control mode</li>
-      <li><a href="https://shelly-forum.com/thread/14656-shelly-app-for-android-how-to-use-local-control-mode-no-cloud">Shelly Forum: local control mode without cloud</a>: support answer on one-time cloud access, ShellyPilot</li>
-      <li><a href="https://techtest.org/shelly-camera-im-test-guenstige-ueberwachungskamera-aus-europa-ohne-cloud-zwang-mit-rtsp-mqtt/">techtest.org review</a>: cloud fully disableable, Home Assistant stream via RTSP only</li>
-      <li><a href="https://www.notebookcheck.net/New-Shelly-smart-security-camera-on-the-way.1229284.0.html">Notebookcheck: pre-launch announcement</a>: RTSP/ONVIF announced</li>
     </ul>
     <footer>
       <hr>
