@@ -271,7 +271,7 @@ SPDX-License-Identifier: Unlicense
     <p>The example uses a metered plug (Network Hub) that feeds a miner (NerdQAxe), which reports its own power.</p>
     <ol>
       <li>Add a template sensor that subtracts the child power from the parent power, floored at zero (Listing 1).</li>
-      <li>Add an integral sensor that converts W to kWh with a left Riemann sum (Listing 1).</li>
+      <li>Add an integral sensor that converts W to kWh with a <a href="https://www.home-assistant.io/integrations/integration">left Riemann sum</a> (Listing 1).</li>
       <li>Restart Home Assistant.</li>
       <li>Open Settings &#8594; Dashboards &#8594; Energy &#8594; Individual devices &#8594; Add device and enter the values of Table 1.</li>
     </ol>
@@ -320,7 +320,7 @@ sensor:
     <h2>Verification</h2>
     <ul>
       <li>The gray node under the parent drops to zero. The remainder appears under its own name in all energy cards.</li>
-      <li>The home-level "Untracked consumption" remains.</li>
+      <li>The home-level "Untracked consumption" remains. Repeat this procedure for all untracked consumptions if desired.</li>
     </ul>
     <h2>Limitations</h2>
     <ul>
@@ -331,13 +331,6 @@ sensor:
     </ul>
     <h2>Alternative</h2>
     <p>The <a href="https://github.com/MindFreeze/ha-sankey-chart">Sankey Chart card</a> from the Home Assistant Community Store (HACS) can be used on a custom dashboard. Its node type <code>remaining_parent_state</code> takes a free <code>name</code> per parent. However, the chart configuration must be maintained by hand.</p>
-    <h2>References</h2>
-    <ul>
-      <li><a href="https://github.com/home-assistant/frontend/pull/55581">home-assistant/frontend#55581</a>: Allow naming the untracked consumption of an upstream device</li>
-      <li><a href="https://github.com/home-assistant/core/pull/190110">home-assistant/core#190110</a>: Add untracked name to energy device consumption</li>
-      <li><a href="https://www.home-assistant.io/integrations/integration">Integral (Riemann sum)</a>, Home Assistant documentation</li>
-      <li><a href="https://github.com/MindFreeze/ha-sankey-chart">MindFreeze/ha-sankey-chart</a></li>
-    </ul>
     <footer>
       <hr>
       <img src="./animated-mail-image-0311.gif" alt="Animated Mailboxes">
